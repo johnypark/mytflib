@@ -6,5 +6,10 @@ It consist of four main parts.
  - 2. Learining rate searcher and scheduler 
  - 3. TFrecord writer
  - 4. Custom trainer - Gradient accumulation, Class re-weighting.
+
+
+```
+pip install mytflib
+```
  
  
