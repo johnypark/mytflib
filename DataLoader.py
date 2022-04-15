@@ -1,6 +1,5 @@
 ### DataLoader for tensorflow ###
 ### Written and put together by John Park
-### MIT license ###
 
 import numpy as np
 import pandas as pd
