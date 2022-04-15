@@ -1,5 +1,5 @@
 
-My Tensorflow Library is collection of codes for a more fluent tensorflow usage. 
+My TensorFlow Library is a collection of codes for a more fluent tensorflow usage. 
 
 It consist of four main parts. 
  - 1. DataLoader
