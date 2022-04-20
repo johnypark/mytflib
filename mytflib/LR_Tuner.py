@@ -62,21 +62,20 @@ class LossAndErrorPrintingCallback(tf.keras.callbacks.Callback):
 
 class Search_LR():
   import tensorflow_addons as tfa
-
   def __init__(
       self,
       ftn_to_build_model,
       num_classes,
       resize_resol,
-      optimizer: tf.keras.optimizers.Optimizer,
-      loss_fn: tf.keras.losses.Loss,
-      LR_range, #list
+      optimizer,
+      loss_fn, 
+      LR_range, 
       total_steps,
       TPU_strategy,
       wd_ls = 5e-5, 
       momentum_ls = 0.9,
-      name="Search_LR"
-      ) -> None:
+      name = "Search_LR"
+      ):
     
     super(Search_LR, self).__init__() #what does this do???
     
