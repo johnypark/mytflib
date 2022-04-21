@@ -1,3 +1,4 @@
+[![Downloads](https://pepy.tech/badge/mytflib)](https://pepy.tech/project/mytflib)
 
 My Tensorflow Library is collection of codes for a more fluent tensorflow usage. 
 
