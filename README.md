@@ -1,6 +1,4 @@
-[![Downloads](https://pepy.tech/badge/mytflib)](https://pepy.tech/project/mytflib)
-
-[![PyPI version](https://badge.fury.io/py/mytflib.svg)](https://badge.fury.io/py/mytflib)
+[![PyPI version](https://badge.fury.io/py/mytflib.svg)](https://badge.fury.io/py/mytflib)   [![Downloads](https://pepy.tech/badge/mytflib)](https://pepy.tech/project/mytflib)
 
 My Tensorflow Library is collection of codes for a more fluent tensorflow usage. 
 
