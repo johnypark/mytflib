@@ -90,6 +90,7 @@ def sigmoid_focal_crossentropy(
     y_pred: TensorLike,
     alpha: FloatTensorLike = 0.25,
     gamma: FloatTensorLike = 2.0,
+    label_smoothing = 0.,
     from_logits: bool = False,
     ):
   
@@ -100,7 +101,9 @@ def sigmoid_focal_crossentropy(
     y_true = tf.cast(y_true, dtype=y_pred.dtype)
 
     # Get the cross_entropy for each entry
-    ce = K.binary_crossentropy(y_true, y_pred, from_logits=from_logits)
+    ce = K.binary_crossentropy(y_true, y_pred, 
+                               label_smoothing = label_smoothing, 
+                               from_logits=from_logits)
 
     # If logits are provided then convert the predictions into probabilities
     if from_logits:
@@ -147,6 +150,7 @@ class SigmoidFocalCrossEntropy(LossFunctionWrapper):
         alpha: FloatTensorLike = 0.25,
         gamma: FloatTensorLike = 2.0,
         reduction: str = tf.keras.losses.Reduction.AUTO,
+        label_smoothing = 0.,
         name: str = "sigmoid_focal_crossentropy",
     ):
         super().__init__(
@@ -154,6 +158,7 @@ class SigmoidFocalCrossEntropy(LossFunctionWrapper):
             name=name,
             reduction=reduction,
             from_logits=from_logits,
+            label_smoothing = label_smoothing,
             alpha=alpha,
             gamma=gamma
         )
