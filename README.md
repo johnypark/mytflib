@@ -11,7 +11,7 @@ It consist of four main parts:
 
 
  ```
- pip install mytflib==0.0.1.6
+ pip install mytflib==0.0.1.7
 
  pip install git+https://github.com/johnypark/mytflib@main
 
