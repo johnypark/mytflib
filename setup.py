@@ -15,9 +15,8 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires = ['tensorflow',
                        'pandas',
-                       'numpy',
                        'tensorflow_addons'
-                       ],
+                       'opencv-python'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
