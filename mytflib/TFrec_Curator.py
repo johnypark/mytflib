@@ -118,7 +118,7 @@ def write_TFrec_from_df_jpeg(DataFrame, iPATH_col, TFREC_structure, dict_hchy, n
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
                 img_bytes = cv2.imencode('.jpg', img, (cv2.IMWRITE_JPEG_QUALITY, TAR_QUALITY))[1].tobytes() #tostring written by chris output [true, values], so take 1.
                 _feature_ = tfrec_feature()
-                for key, value in format:
+                for key, value in format.items():
                   if value =="image":
                     _feature_.add_feature(key, img_bytes)
                   
