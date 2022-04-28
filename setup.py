@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="mytflib", # Replace with your own username
-    version="0.0.1.8",
+    version="0.0.1.9",
     author="John Park",
     author_email="parkjohnyc@gmail.com",
     description="My TensorFlow Library",
