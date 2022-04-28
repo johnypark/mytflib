@@ -1,0 +1,13 @@
+README.md
+setup.py
+mytflib/DataLoader.py
+mytflib/LR_Shaper.py
+mytflib/LR_Tuner.py
+mytflib/TFrec_Curator.py
+mytflib/Train_Manager.py
+mytflib/__init__.py
+mytflib.egg-info/PKG-INFO
+mytflib.egg-info/SOURCES.txt
+mytflib.egg-info/dependency_links.txt
+mytflib.egg-info/requires.txt
+mytflib.egg-info/top_level.txt
