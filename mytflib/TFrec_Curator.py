@@ -9,6 +9,22 @@ import cv2
 # this file is for TFREC writer function.
 
 
+def get_hchy_table(df, list_target_names):
+
+    subset_class = dict()
+    subset_hier = dict()
+    
+    for cls in list_target_names:
+        subset_class[cls] = sorted(set(df[cls]))
+        subset_hier[cls] = dict()
+        idx = 0
+        for ele in subset_class[cls]:
+            subset_hier[cls][ele] = idx 
+            idx += 1 
+            
+    table_hchy = subset_hier
+    return(table_hchy)
+
 
 def h22_getfPATH(rPATH, df, Dtype="train"):
     if Dtype != "train":
@@ -70,6 +86,8 @@ class tfrec_feature(object):
           _func_feature = _int64_feature
         elif type_data is float:
           _func_feature = _float_feature
+        elif type_data is bool:
+          _func_feature = _int64_feature
         
         self.feature[data_label] = _func_feature(data)
                
