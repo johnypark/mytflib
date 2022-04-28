@@ -1,3 +1,4 @@
 tensorflow
 pandas
-tensorflow_addonsopencv-python
+tensorflow_addons
+opencv-python
