@@ -33,10 +33,10 @@ def class_balanced_weight(labels, N_unique_proto):
     return class_weights #reweight so sum of all weights equals to number of classes. 
   
   
-def GetDictCls(GivenWeight, labels):
+def GetDictCls(GivenWeight):
     class_weight = dict()
     i = 0
-    for id in np.unique(labels):
+    for id in range(0,len(GivenWeight)):
         class_weight[id] = round(GivenWeight[i],2)
         i = i+1
     return class_weight
