@@ -1,4 +1,39 @@
 import numpy as np
+import os
+import csv
+
+class SaveModelHistory(tf.keras.callbacks.Callback):
+    #https://stackoverflow.com/questions/60727279/save-history-of-model-fit-for-different-epochs
+    #modified from the above code
+    
+    def __init__(self,
+                 outfilename, 
+                 oPATH="./",
+                 **kargs):
+        super(SaveModelHistory,self).__init__(**kargs)
+        self.OFname = outfilename
+        self.oPATH = oPATH
+        if (self.OFname in os.listdir(self.oPATH)):
+            self.OFname = self.OFname.split(".csv")[0]+"_1"+".csv" 
+        self.fPATH = os.path.join(self.oPATH, self.OFname)
+        
+    def on_epoch_end(self,batch,logs=None):
+        if ('lr' not in logs.keys()):
+            logs.setdefault('lr',0)
+            logs['lr'] = tf.keras.backend.get_value(self.model.optimizer.lr)
+
+        if not (self.OFname in os.listdir(self.oPATH)):
+            with open(self.fPATH,'a') as f:
+                y = csv.DictWriter(f,logs.keys())
+                y.writeheader()
+
+        with open(self.fPATH,'a') as f:
+            y=csv.DictWriter(f,logs.keys())
+            logs_mod = dict()
+            for key, value in logs.items():
+                logs_mod[key] = float(np.mean(value))
+            y.writerow(logs_mod)
+
 
 ## Class reweighting strategies for class imbalance 
 
