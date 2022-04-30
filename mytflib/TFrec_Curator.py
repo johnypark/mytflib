@@ -6,6 +6,7 @@ import os
 import glob
 import random
 import cv2
+import DataLoader
 # this file is for TFREC writer function.
 
 
@@ -131,5 +132,28 @@ def write_TFrec_from_df_jpeg(DataFrame, iPATH_col, TFREC_structure, dict_hchy, n
                 writer.write(example)
                 if k%500==0: print(k,', ',end='')
 
+### Confirm the tfrecord is correctly created ####
+### tfrec_format is the same as in DataLoader ####
+### tfrec_format is not the same as tfrec_structure ####
+### image:str vs image:image ####
 
+def display_sample_from_TFrec(tfrec_PATH, TFREC_FORMAT, display_size, N_suffle = 10):
+    """Example of TFREC_format
+    {"image":"str", "image_id":"int"}
+    """
+    raw_dataset = tf.data.TFRecordDataset(tfrec_PATH)
+    tfrec_format = DataLoader.tfrec_format_generator(TFREC_FORMAT)
+    parsed_dataset = raw_dataset.map(lambda x : DataLoader.parse_tfrecord_fn(x, tfrec_format))
+    parsed_dataset = parsed_dataset.shuffle(N_suffle)
+    import matplotlib.pyplot as plt
+
+    for features in parsed_dataset.take(1):
+        for key in features.keys():
+            if key != "image":
+                print(f"{key}: {features[key]}")
+
+    print(f"Image shape: {features['image'].shape}")
+    plt.figure(figsize=display_size)
+    plt.imshow(features["image"].numpy())
+    plt.show()
 
