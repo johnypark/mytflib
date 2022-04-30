@@ -1,11 +1,12 @@
 import numpy as np
 import os
 import csv
+import tensorflow as tf
 
 class SaveModelHistory(tf.keras.callbacks.Callback):
     #https://stackoverflow.com/questions/60727279/save-history-of-model-fit-for-different-epochs
     #modified from the above code
-    
+
     def __init__(self,
                  outfilename, 
                  oPATH="./",
