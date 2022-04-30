@@ -6,7 +6,11 @@ import os
 import glob
 import random
 import cv2
-import DataLoader
+from mytflib.DataLoader import (
+    tfrec_format_generator,
+    parse_tfrecord_fn
+)
+
 # this file is for TFREC writer function.
 
 
@@ -142,8 +146,8 @@ def display_sample_from_TFrec(tfrec_PATH, TFREC_FORMAT, display_size, N_suffle =
     {"image":"str", "image_id":"int"}
     """
     raw_dataset = tf.data.TFRecordDataset(tfrec_PATH)
-    tfrec_format = DataLoader.tfrec_format_generator(TFREC_FORMAT)
-    parsed_dataset = raw_dataset.map(lambda x : DataLoader.parse_tfrecord_fn(x, tfrec_format))
+    tfrec_format = tfrec_format_generator(TFREC_FORMAT)
+    parsed_dataset = raw_dataset.map(lambda x : parse_tfrecord_fn(x, tfrec_format))
     parsed_dataset = parsed_dataset.shuffle(N_suffle)
     import matplotlib.pyplot as plt
 
