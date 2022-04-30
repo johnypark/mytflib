@@ -45,6 +45,14 @@ def tfrec_format_generator(dictionary_obj):
     return tfrec_format
 
 
+def parse_tfrecord_fn(example, TFREC_FORMAT):    
+    
+    example = tf.io.parse_single_example(example, TFREC_FORMAT)
+    example["image"] = tf.io.decode_jpeg(example["image"], channels=3)
+    #tf.sparse.to_dense(example["bbox"])
+    return example
+
+
 def decode_image(image_data_bytes, tfrec_image_sizes):
 
     img = tf.image.decode_jpeg(image_data_bytes, channels=3)  # image format uint8 [0,255]
