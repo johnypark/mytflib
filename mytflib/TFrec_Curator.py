@@ -26,18 +26,6 @@ def get_hchy_table(df, list_target_names):
     return(table_hchy)
 
 
-def h22_getfPATH(rPATH, df, Dtype="train"):
-    if Dtype != "train":
-        print("error")
-    ls_fPATHs = [0]*len(df)
-    pos_split = 3
-    for i in range(len(df)):
-        c_df = df.iloc[i]
-        zf_cat_id = str(c_df.category_id).zfill(5)
-        ls_fPATHs[i] =  os.path.join(rPATH, zf_cat_id[:pos_split], zf_cat_id[pos_split:], c_df.image_id+".jpg")
-    return ls_fPATHs
-
-
 ## WRITE TFRECORD ##
  
 ## adapted from here: https://www.kaggle.com/code/cdeotte/how-to-create-tfrecords/notebook
@@ -66,7 +54,6 @@ def _int64_feature(value):
   return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
 
-
 class tfrec_feature(object):
     """ creates an tfrec feature object. initiate with object name. add features with add_feature function.
     based on the type of the data, it choses feature functinos from above. 
@@ -76,19 +63,9 @@ class tfrec_feature(object):
         self.feature = dict()
         self.type_dict = dict()
 
-    def add_feature(self, data_label, data):
+    def add_feature(self, data_label, data, _func_feature):
         type_data = type(data)
         self.type_dict[data_label] = type_data
-        
-        if type_data is bytes:
-          _func_feature = _bytes_feature
-        elif type_data is int:
-          _func_feature = _int64_feature
-        elif type_data is float:
-          _func_feature = _float_feature
-        elif type_data is bool:
-          _func_feature = _int64_feature
-        
         self.feature[data_label] = _func_feature(data)
                
     def show(self):
@@ -138,21 +115,21 @@ def write_TFrec_from_df_jpeg(DataFrame, iPATH_col, TFREC_structure, dict_hchy, n
                 _feature_ = tfrec_feature()
                 for key, value in format.items():
                   if value =="image":
-                    _feature_.add_feature(key, img_bytes)
+                    _feature_.add_feature(key, img_bytes, _bytes_feature)
                   
                   elif value =="int":
                     if labels_lookup is True:
-                      _feature_.add_feature(key, table_hchy[key][row[key]])  
+                      _feature_.add_feature(key, table_hchy[key][row[key]], _int64_feature)  
                     else:
-                      _feature_.add_feature(key, row[key])
+                      _feature_.add_feature(key, row[key], _int64_feature)
                   
                   elif value == "str":
-                    _feature_.add_feature(key, bytes(row[key], 'utf-8'))
-
+                    _feature_.add_feature(key, bytes(row[key], 'utf-8'), _bytes_feature)
+              
                 example =_feature_.serialize_example()
                 
                 writer.write(example)
-                if k%1000==0: print(k,', ',end='')
+                if k%500==0: print(k,', ',end='')
 
 
 
