@@ -4,19 +4,39 @@
 
 import numpy as np
 import pandas as pd
-import re, math
+import re
 import tensorflow as tf
 import tensorflow_addons as tfa
-import tensorflow as tf, re, math
+import json
+
 
 AUTO = tf.data.experimental.AUTOTUNE
+
+def json_open(full_path):
+    with open(full_path) as f:
+        out = json.load(f)
+    return out
+
+def json_save(jsonData, filename):
+    with open(filename, 'w') as outfile:
+        json.dump(jsonData, outfile, sort_keys = True, indent = 4,
+               ensure_ascii = False)
+
+
+def load_image_and_resize(full_path, RESIZE, central_crop_frac = 0.9):
+    
+    raw = tf.io.read_file(full_path)
+    img = tf.io.decode_image(raw)
+    img = tf.image.central_crop(img, central_fraction = central_crop_frac)
+    img = tf.image.resize(img, size = RESIZE)
+    return(img)
 
 
 def tfrec_format_generator(dictionary_obj):
 
     tfrec_format= dict()
     for key, value in dictionary_obj.items():
-        if value == "string":
+        if value == "str":
             tfrec_format[key] = tf.io.FixedLenFeature([], tf.string)
         elif value == "int":
             tfrec_format[key] = tf.io.FixedLenFeature([], tf.int64)
