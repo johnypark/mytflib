@@ -80,8 +80,6 @@ def ConvertLabelsToInt(ls_labels):
 
 import tensorflow as tf
 import tensorflow.keras.backend as K
-from typeguard import typechecked
-
 from tensorflow_addons.utils.keras_utils import LossFunctionWrapper
 from tensorflow_addons.utils.types import FloatTensorLike, TensorLike
 
