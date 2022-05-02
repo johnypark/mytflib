@@ -24,7 +24,17 @@ def model_config_save(model,
 
   model_info = dict()
   model_info['optimizer'] = model.optimizer.get_config()
-  model_info['loss'] =model.loss.get_config()
+    
+  try:
+    model_info['loss'] = model.loss.get_config()
+  
+  except:
+    model_info['loss'] = dict()
+    i = 0;
+    for loss_i in model.loss:
+      model_info['loss'][i] = loss_i.get_config()
+      i +=1
+        
   model_info['optimizer'] = change_np_float_to_float(model_info['optimizer'])
   model_info['loss'] = change_np_float_to_float(model_info['loss'])
   print("model optimizer loss type adjusted for json serialization")
