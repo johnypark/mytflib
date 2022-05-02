@@ -7,12 +7,12 @@ from timeit import default_timer as timer
 import re
 import json
 
-
-
 def change_np_float_to_float(Dict):
   for key,value in Dict.items():
     if type(value) not in [str, float, bool]:
-      if value is not None:
+      if type(value) is dict:
+        change_np_float_to_float(Dict[key]) ##Recursive in case of nested dictionary
+      elif value is not None:
         Dict[key] = float(value) 
   return(Dict)
 
