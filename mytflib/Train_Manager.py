@@ -48,7 +48,7 @@ class SaveModelHistory(tf.keras.callbacks.Callback):
         super(SaveModelHistory,self).__init__(**kargs)
         
         self.config_info = config_info
-        self.OFname = outfilename
+        self.OFname = outfilename.split(".")[0]+".csv"
         self.oPATH = oPATH
 
         if (self.OFname in os.listdir(self.oPATH)):
