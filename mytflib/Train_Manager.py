@@ -2,26 +2,99 @@ import numpy as np
 import os
 import csv
 import tensorflow as tf
+import numpy as np
+from timeit import default_timer as timer
+import re
+import json
 
+
+
+def change_np_float_to_float(Dict):
+  for key,value in Dict.items():
+    if type(value) not in [str, float, bool]:
+      if value is not None:
+        Dict[key] = float(value) 
+  return(Dict)
+
+def model_config_save(model,
+                      config_info, 
+                      file_name, oPATH):
+
+  model_info = dict()
+  model_info['optimizer'] = model.optimizer.get_config()
+  model_info['loss'] =model.loss.get_config()
+  model_info['optimizer'] = change_np_float_to_float(model_info['optimizer'])
+  model_info['loss'] = change_np_float_to_float(model_info['loss'])
+  print("model optimizer loss type adjusted for json serialization")
+  model_info['config_info'] = config_info
+  print("grab config info")
+  fPATH = os.path.join(oPATH,file_name)
+  with open(fPATH, 'w') as outfile:
+    json.dump(model_info, outfile, sort_keys = True, indent = 4,
+               ensure_ascii = False)
+  print("done - saving config info to {}".format(fPATH))
+  
 class SaveModelHistory(tf.keras.callbacks.Callback):
     #https://stackoverflow.com/questions/60727279/save-history-of-model-fit-for-different-epochs
     #modified from the above code
+    """ Saving model history and configuration to outfilename.csv and configs_outfilename.json"""
 
     def __init__(self,
+                 config_info,
                  outfilename, 
                  oPATH="./",
                  **kargs):
         super(SaveModelHistory,self).__init__(**kargs)
+        
+        self.config_info = config_info
         self.OFname = outfilename
         self.oPATH = oPATH
+
         if (self.OFname in os.listdir(self.oPATH)):
-            self.OFname = self.OFname.split(".csv")[0]+"_1"+".csv" 
+          print("{} already exsits".format(self.OFname))
+          NameExistError = True
+          self.OFname =  self.OFname.split(".csv")[0]+"_1.csv" 
+          while NameExistError:
+            if (self.OFname in os.listdir(self.oPATH)):
+              print("{} already exsits".format(self.OFname))
+              raw_name = self.OFname.split(".csv")[0].split("_")[:-1]
+              name_index = re.findall(r'\_\d+\b', self.OFname)[0].split("_")[1]
+              name_index = str(int(name_index) + 1)
+              self.OFname ="_".join(raw_name+[name_index])+".csv"
+            else:
+              print("using filename {} for saving current training task.".format(self.OFname))
+              NameExistError = False
         self.fPATH = os.path.join(self.oPATH, self.OFname)
+        print("initialization is done")
         
-    def on_epoch_end(self,batch,logs=None):
+    def on_train_begin(self, logs = {}):
+        
+        json_file_name = "configs_"+self.OFname.split(".csv")[0]+".json"
+        model_config_save(model = self.model, config_info = self.config_info, 
+                          file_name = json_file_name, 
+                          oPATH = self.oPATH)
+
+    def on_epoch_begin(self, epoch, logs={}):
+        self.start_time = timer()
+        #print("epoch begun - timer set")
+        
+        
+    def on_epoch_end(self,batch,logs={}):
         if ('lr' not in logs.keys()):
-            logs.setdefault('lr',0)
+            #logs.setdefault('lr',0)
             logs['lr'] = tf.keras.backend.get_value(self.model.optimizer.lr)
+        
+        if ('momentum' not in logs.keys()):
+            #logs.setdefault('momentum',0)
+            logs['momentum'] = tf.keras.backend.get_value(self.model.optimizer.momentum)
+        
+        if ('weight_decay' not in logs.keys()):
+            #logs.setdefault('weight_decay',0)
+            logs['weight_decay'] = tf.keras.backend.get_value(self.model.optimizer.weight_decay)
+
+        logs['time'] = timer()-self.start_time
+        
+        #print("epoch end - dict lr, momentum, wd, time")
 
         if not (self.OFname in os.listdir(self.oPATH)):
             with open(self.fPATH,'a') as f:
@@ -34,7 +107,6 @@ class SaveModelHistory(tf.keras.callbacks.Callback):
             for key, value in logs.items():
                 logs_mod[key] = float(np.mean(value))
             y.writerow(logs_mod)
-
 
 ## Class reweighting strategies for class imbalance 
 
