@@ -5,6 +5,7 @@ from timeit import default_timer as timer
 import re
 import json
 import tensorflow as tf
+from contextlib import redirect_stdout
 
 
 def change_np_float_to_float(Dict):
@@ -45,6 +46,8 @@ def model_config_save(model,
     json.dump(model_info, outfile, sort_keys = True, indent = 4,
                ensure_ascii = False)
   print("done - saving config info to {}".format(fPATH))
+
+
   
   
 class SaveModelHistory(tf.keras.callbacks.Callback):
@@ -76,7 +79,12 @@ class SaveModelHistory(tf.keras.callbacks.Callback):
               print("using filename {} for saving current training task.".format(self.OFname))
               NameExistError = False
         self.fPATH = os.path.join(self.oPATH, self.OFname)
-        print("initialization is done")
+        
+        model_summary_file_name = "model_summary_"+self.OFname.split(".csv")[0]+".txt"
+        with open(os.path.join(oPATH, model_summary_file_name), 'w') as f:  #make this automatic, within SaveModelHistory
+          with redirect_stdout(f):
+            self.model.summary()
+        print("model summary saved to {}. initialization is done".format(model_summary_file_name))
         
     def on_train_begin(self, logs = None):
         
