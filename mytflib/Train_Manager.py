@@ -1,11 +1,12 @@
-import numpy as np
 import os
 import csv
-import tensorflow as tf
 import numpy as np
 from timeit import default_timer as timer
 import re
 import json
+import tensorflow as tf
+
+
 
 def change_np_float_to_float(Dict):
   for key,value in Dict.items():
@@ -37,7 +38,6 @@ def model_config_save(model,
 class SaveModelHistory(tf.keras.callbacks.Callback):
     #https://stackoverflow.com/questions/60727279/save-history-of-model-fit-for-different-epochs
     #modified from the above code
-    """ Saving model history and configuration to outfilename.csv and configs_outfilename.json"""
 
     def __init__(self,
                  config_info,
@@ -67,46 +67,51 @@ class SaveModelHistory(tf.keras.callbacks.Callback):
         self.fPATH = os.path.join(self.oPATH, self.OFname)
         print("initialization is done")
         
-    def on_train_begin(self, logs = {}):
+    def on_train_begin(self, logs = None):
         
         json_file_name = "configs_"+self.OFname.split(".csv")[0]+".json"
         model_config_save(model = self.model, config_info = self.config_info, 
                           file_name = json_file_name, 
                           oPATH = self.oPATH)
+        self.model_optim_config = self.model.optimizer.get_config()
+        print(self.model_optim_config)
 
-    def on_epoch_begin(self, epoch, logs={}):
+    def on_epoch_begin(self, epoch, logs=None):
         self.start_time = timer()
         #print("epoch begun - timer set")
         
-        
-    def on_epoch_end(self,batch,logs={}):
-        if ('lr' not in logs.keys()):
-            #logs.setdefault('lr',0)
-            logs['lr'] = tf.keras.backend.get_value(self.model.optimizer.lr)
-        
-        if ('momentum' not in logs.keys()):
-            #logs.setdefault('momentum',0)
-            logs['momentum'] = tf.keras.backend.get_value(self.model.optimizer.momentum)
-        
-        if ('weight_decay' not in logs.keys()):
-            #logs.setdefault('weight_decay',0)
-            logs['weight_decay'] = tf.keras.backend.get_value(self.model.optimizer.weight_decay)
+    def on_epoch_end(self, epoch, logs=None):
+        extra_logs = dict()
+        extra_logs['learning_rate'] = tf.keras.backend.get_value(self.model.optimizer.learning_rate)
+        extra_logs['momentum'] = tf.keras.backend.get_value(self.model.optimizer.momentum)
+        extra_logs['weight_decay'] = tf.keras.backend.get_value(self.model.optimizer.weight_decay)
 
+        for hyperparam, value in extra_logs.items():
+          if type(self.model_optim_config[hyperparam]) is dict:
+            #print(extra_logs[hyperparam])
+            extra_logs[hyperparam] = float(value(epoch*self.config_info["steps_per_epoch"]))
+        
         logs['time'] = timer()-self.start_time
         
         #print("epoch end - dict lr, momentum, wd, time")
+        #print(extra_logs, logs)
 
         if not (self.OFname in os.listdir(self.oPATH)):
             with open(self.fPATH,'a') as f:
-                y = csv.DictWriter(f,logs.keys())
+                y = csv.DictWriter(f,list(logs.keys())+list(extra_logs.keys()))
                 y.writeheader()
 
         with open(self.fPATH,'a') as f:
-            y=csv.DictWriter(f,logs.keys())
+            y=csv.DictWriter(f,list(logs.keys())+list(extra_logs.keys()))
             logs_mod = dict()
             for key, value in logs.items():
                 logs_mod[key] = float(np.mean(value))
+            for key, value in extra_logs.items():
+                logs_mod[key] = float(np.mean(value))
+            
             y.writerow(logs_mod)
+            
+        #print("epoch end - successfully appeneded lr, momentum, wd, time to {}".format(self.fPATH))
 
 ## Class reweighting strategies for class imbalance 
 
