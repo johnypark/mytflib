@@ -90,7 +90,7 @@ class SaveModelHistory(tf.keras.callbacks.Callback):
         for hyperparam, value in extra_logs.items():
           if type(self.model_optim_config[hyperparam]) is dict:
             #print(extra_logs[hyperparam])
-            extra_logs[hyperparam] = float(value(epoch*self.config_info["steps_per_epoch"]))
+            extra_logs[hyperparam] = float(value((epoch+1) * self.config_info["steps_per_epoch"]))
         
         logs['time'] = timer()-self.start_time
         
