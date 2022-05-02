@@ -9,6 +9,7 @@ import tensorflow as tf
 
 
 def change_np_float_to_float(Dict):
+    
   for key,value in Dict.items():
     if type(value) not in [str, float, bool]:
       if type(value) is dict:
@@ -16,6 +17,9 @@ def change_np_float_to_float(Dict):
       elif value is not None:
         Dict[key] = float(value) 
   return(Dict)
+
+
+
 
 def model_config_save(model,
                       config_info, 
@@ -35,10 +39,12 @@ def model_config_save(model,
                ensure_ascii = False)
   print("done - saving config info to {}".format(fPATH))
   
+  
+  
+  
 class SaveModelHistory(tf.keras.callbacks.Callback):
     #https://stackoverflow.com/questions/60727279/save-history-of-model-fit-for-different-epochs
     #modified from the above code
-
     def __init__(self,
                  config_info,
                  outfilename, 
@@ -110,12 +116,14 @@ class SaveModelHistory(tf.keras.callbacks.Callback):
                 logs_mod[key] = float(np.mean(value))
             
             y.writerow(logs_mod)
-            
+    
         #print("epoch end - successfully appeneded lr, momentum, wd, time to {}".format(self.fPATH))
 
 ## Class reweighting strategies for class imbalance 
 
+
 def class_balanced_weight(labels, N_unique_proto):
+    
     import numpy as np
     #Get frequency and number of classes
     ni = np.bincount(labels)
@@ -146,7 +154,10 @@ def class_balanced_weight(labels, N_unique_proto):
     return class_weights #reweight so sum of all weights equals to number of classes. 
   
   
+  
+  
 def GetDictCls(GivenWeight):
+    
     class_weight = dict()
     i = 0
     for id in range(0,len(GivenWeight)):
@@ -156,6 +167,7 @@ def GetDictCls(GivenWeight):
 
 
 def ConvertLabelsToInt(ls_labels):
+    
   if type(ls_labels) is not list:
     print("error!")
   Ordered = sorted(set(ls_labels))
@@ -242,6 +254,9 @@ def sigmoid_focal_crossentropy(
     # compute the final loss and return
     return Result
 
+
+
+
 class SigmoidFocalCrossEntropy(LossFunctionWrapper):
     """Implements the focal loss function.
     Focal loss was first introduced in the RetinaNet paper
@@ -260,7 +275,7 @@ class SigmoidFocalCrossEntropy(LossFunctionWrapper):
         gamma: FloatTensorLike = 2.0,
         reduction: str = tf.keras.losses.Reduction.AUTO,
         
-        name: str = "sigmoid_focal_crossentropy",
+        name: str = "tfl_sigmoid_focal_crossentropy",
     ):
         super().__init__(
             sigmoid_focal_crossentropy, 
