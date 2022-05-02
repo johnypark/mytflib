@@ -7,7 +7,6 @@ import json
 import tensorflow as tf
 
 
-
 def change_np_float_to_float(Dict):
     
   for key,value in Dict.items():
@@ -17,8 +16,6 @@ def change_np_float_to_float(Dict):
       elif value is not None:
         Dict[key] = float(value) 
   return(Dict)
-
-
 
 
 def model_config_save(model,
@@ -38,8 +35,6 @@ def model_config_save(model,
     json.dump(model_info, outfile, sort_keys = True, indent = 4,
                ensure_ascii = False)
   print("done - saving config info to {}".format(fPATH))
-  
-  
   
   
 class SaveModelHistory(tf.keras.callbacks.Callback):
@@ -154,8 +149,6 @@ def class_balanced_weight(labels, N_unique_proto):
     return class_weights #reweight so sum of all weights equals to number of classes. 
   
   
-  
-  
 def GetDictCls(GivenWeight):
     
     class_weight = dict()
@@ -208,6 +201,7 @@ import tensorflow.keras.backend as K
 from tensorflow_addons.utils.keras_utils import LossFunctionWrapper
 from tensorflow_addons.utils.types import FloatTensorLike, TensorLike
 
+
 def sigmoid_focal_crossentropy(
     y_true: TensorLike,
     y_pred: TensorLike,
@@ -253,8 +247,6 @@ def sigmoid_focal_crossentropy(
     #Result = tf.nn.relu(Result)
     # compute the final loss and return
     return Result
-
-
 
 
 class SigmoidFocalCrossEntropy(LossFunctionWrapper):
