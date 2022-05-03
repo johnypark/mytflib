@@ -21,7 +21,9 @@ def change_np_float_to_float(Dict):
 
 def model_config_save(model,
                       config_info, 
-                      file_name, oPATH):
+                      json_file_name, 
+                      txt_file_name,
+                      oPATH):
 
   model_info = dict()
   model_info['optimizer'] = model.optimizer.get_config()
@@ -41,11 +43,16 @@ def model_config_save(model,
   print("model optimizer loss type adjusted for json serialization")
   model_info['config_info'] = config_info
   print("grab config info")
-  fPATH = os.path.join(oPATH,file_name)
+  fPATH = os.path.join(oPATH,json_file_name)
   with open(fPATH, 'w') as outfile:
     json.dump(model_info, outfile, sort_keys = True, indent = 4,
                ensure_ascii = False)
   print("done - saving config info to {}".format(fPATH))
+  with open(os.path.join(oPATH, txt_file_name), 'w') as f:  #make this automatic, within SaveModelHistory
+    with redirect_stdout(f):
+        model.summary()
+  print("model summary saved to {}. initialization is done".format(txt_file_name))
+        
 
 
   
@@ -80,18 +87,18 @@ class SaveModelHistory(tf.keras.callbacks.Callback):
               NameExistError = False
         self.fPATH = os.path.join(self.oPATH, self.OFname)
         
-        model_summary_file_name = "model_summary_"+self.OFname.split(".csv")[0]+".txt"
-        with open(os.path.join(oPATH, model_summary_file_name), 'w') as f:  #make this automatic, within SaveModelHistory
-          with redirect_stdout(f):
-            self.model.summary()
-        print("model summary saved to {}. initialization is done".format(model_summary_file_name))
+        #Adapted from: https://stackoverflow.com/questions/45199047/how-to-save-model-summary-to-file-in-keras
         
     def on_train_begin(self, logs = None):
         
-        json_file_name = "configs_"+self.OFname.split(".csv")[0]+".json"
+        json_file_name = self.OFname.split(".csv")[0]+"_configs.json"
+        model_summary_file_name = self.OFname.split(".csv")[0]+"_model_summary.txt" 
+        
         model_config_save(model = self.model, config_info = self.config_info, 
-                          file_name = json_file_name, 
+                          json_file_name = json_file_name, 
+                          txt_file_name = model_summary_file_name,
                           oPATH = self.oPATH)
+        
         self.model_optim_config = self.model.optimizer.get_config()
         print(self.model_optim_config)
 
