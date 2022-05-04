@@ -54,9 +54,6 @@ def model_config_save(model,
   print("model summary saved to {}. initialization is done".format(txt_file_name))
         
 
-
-  
-  
 class SaveModelHistory(tf.keras.callbacks.Callback):
     #https://stackoverflow.com/questions/60727279/save-history-of-model-fit-for-different-epochs
     #modified from the above code
@@ -115,7 +112,7 @@ class SaveModelHistory(tf.keras.callbacks.Callback):
         for hyperparam, value in extra_logs.items():
           if type(self.model_optim_config[hyperparam]) is dict:
             #print(extra_logs[hyperparam])
-            extra_logs[hyperparam] = float(value((epoch+1) * self.config_info["steps_per_epoch"]))
+            extra_logs[hyperparam] = float(value((epoch+1) * self.config_info["steps_per_epoch"])) ## here replace with self.params.get('steps')
         
         logs['time'] = timer()-self.start_time
         
@@ -187,7 +184,7 @@ def GetDictCls(GivenWeight):
 def ConvertLabelsToInt(ls_labels):
     
   if type(ls_labels) is not list:
-    print("error!")
+    print("error! input is not a list")
   Ordered = sorted(set(ls_labels))
   i = 0
   LookUp = dict()
