@@ -83,7 +83,7 @@ def load_tfrec_dataset(filenames, tfrec_format, tfrec_sizes, label_name, labeled
     # disregarding data order. Order does not matter since we will be shuffling the data anyway.
     ignore_order = tf.data.Options()
     if not ordered:
-        ignore_order.deterministic = False # disable order, increase speed
+        ignore_order.experimental_deterministic = False # disable order, increase speed
     dataset = tf.data.TFRecordDataset(filenames, num_parallel_reads=AUTO) # automatically interleaves reads from multiple files
     dataset = dataset.with_options(ignore_order) # uses data as soon as it streams in, rather than in its original order
     dataset = dataset.map(lambda Example: read_tfrecord(Example, 
