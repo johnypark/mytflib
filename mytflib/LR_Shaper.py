@@ -1,3 +1,19 @@
+__copyright__ = """
+Copyright (c) 2022 John Park
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions: The above copyright notice and this permission
+notice shall be included in all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+"""
 
 import tensorflow as tf
 
@@ -54,10 +70,7 @@ class CyclicalExpLR(tf.keras.optimizers.schedules.LearningRateSchedule):
             "scale_mode": self.scale_mode,
         }
 
-# code by John Park 4/3/2022
-
 from numpy.core.numeric import base_repr
-
 
 class piecewise_ftn():
     
@@ -130,8 +143,11 @@ class piecewise_ftn():
             #"scale_mode": self.scale_mode,
         }
 
+
+
 #!/usr/bin/env python
-__copyright__ = """
+# adpoted from https://github.com/Dtananaev/one_cycle_scheduler_tf
+"""
 Copyright (c) 2021 Tananaev Denis
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -167,6 +183,7 @@ class OneCycle(tf.keras.optimizers.schedules.LearningRateSchedule):
         name=None,
     ):
         """
+        Copyright (c) 2021 Tananaev Denis
         Applies cyclical cosine annealing learning rate.
         It is possible to get the same learning rate scheduler as it was
         used by FastAI for superconvergence: https://docs.fast.ai/callbacks.one_cycle.html
