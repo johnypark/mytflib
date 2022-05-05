@@ -89,6 +89,7 @@ class SaveModelHistory(tf.keras.callbacks.Callback):
           print("{} already exsits".format(self.OFname))
           NameExistError = True
           self.OFname =  self.OFname.split(".csv")[0]+"_1.csv" 
+          
           while NameExistError:
             if (self.OFname in os.listdir(self.oPATH)):
               print("{} already exsits".format(self.OFname))
@@ -99,6 +100,7 @@ class SaveModelHistory(tf.keras.callbacks.Callback):
             else:
               print("using filename {} for saving current training task.".format(self.OFname))
               NameExistError = False
+              
         self.fPATH = os.path.join(self.oPATH, self.OFname)
         
         #Adapted from: https://stackoverflow.com/questions/45199047/how-to-save-model-summary-to-file-in-keras
@@ -156,8 +158,18 @@ class SaveModelHistory(tf.keras.callbacks.Callback):
 ## Class reweighting strategies for class imbalance 
 
 
-def class_balanced_weight(labels, N_unique_proto):
-    
+def class_balanced_weight(labels, max_range):
+    """
+    Args:
+      labels (list): list of integer labels for the entire dataset. e.g., labels = [0, 1, 0, 1, 2, 0, 1, 0, 0, 0] for dataset with len(ds)=10 and N_class = 3
+      max_range (int): max_range of weight variation from the best represented class to the least represented class. if max_range=inf, then weight equals \
+                       to the inverse class frequency
+
+    Returns:
+      _type_: list of class weights indexed by integer number of each class. They are reweighted that sums of the weights equalts to N_class, \
+        so it could yield comparable loss value to no weight case. 
+    """
+  
     import numpy as np
     #Get frequency and number of classes
     ni = np.bincount(labels)
@@ -172,7 +184,7 @@ def class_balanced_weight(labels, N_unique_proto):
       ni = np.bincount(adjusted_labels)
     
     #calculate class-balanced weight followed by Cui et al. "Class-balanced loss based on effective number of samples"
-    Ni = N_unique_proto #given hyper parameter, as LagerN -> inf, the equqation returns compute_class_weight("balanced") from sklearn. 
+    Ni = max_range #given hyper parameter, as LagerN -> inf, the equqation returns compute_class_weight("balanced") from sklearn. 
     beta = (Ni-1)/(Ni)
     invEffn= (1 - beta)/(1 - beta**(ni))
     class_weights = invEffn
@@ -213,107 +225,3 @@ def ConvertLabelsToInt(ls_labels):
   ls_labels_int = [LookUp[item] for item in ls_labels]
   RevLookUp = zip(ls_labels_int, ls_labels)
   return ls_labels_int, dict(RevLookUp)
-
-##############################################
-#### FOCAL LOSS from TensorFlow Addons #####
-############################################
-#### FIX : 1) Complex Number Generation by clipping focal_weight. 2) set reduction to AUTO mitigates exploding gradient.
-####
-# Copyright 2019 The TensorFlow Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
-"""Implements Focal loss."""
-
-import tensorflow as tf
-import tensorflow.keras.backend as K
-from tensorflow_addons.utils.keras_utils import LossFunctionWrapper
-from tensorflow_addons.utils.types import FloatTensorLike, TensorLike
-
-
-def sigmoid_focal_crossentropy(
-    y_true: TensorLike,
-    y_pred: TensorLike,
-    alpha: FloatTensorLike = 0.25,
-    gamma: FloatTensorLike = 2.0,
-    from_logits: bool = False
-    ):
-  
-    if gamma and gamma < 0:
-        raise ValueError("Value of gamma should be greater than or equal to zero.")
-
-    y_pred = tf.convert_to_tensor(y_pred)
-    y_true = tf.cast(y_true, dtype=y_pred.dtype)
-
-    # Get the cross_entropy for each entry
-    ce = K.binary_crossentropy(y_true, y_pred, 
-                               from_logits=from_logits)
-
-    # If logits are provided then convert the predictions into probabilities
-    if from_logits:
-        pred_prob = tf.sigmoid(y_pred)
-    else:
-        pred_prob = y_pred
-
-    p_t = (y_true * pred_prob) + ((1.0 - y_true) * (1.0 - pred_prob))
-    alpha_factor = 1.0
-    modulating_factor = 1.0
-    
-    if alpha:
-        alpha = tf.cast(alpha, dtype=y_true.dtype)
-        alpha_factor = y_true * alpha + (1.0 - y_true) * (1.0 - alpha)
-
-    if gamma:
-        gamma = tf.cast(gamma, dtype=y_true.dtype)
-        focal_weight = K.clip((1.0 - p_t), K.epsilon(), 1.0) 
-        
-        ### The change from tfa_focal_loss : clipped focal_weight to elemniate  
-        ### cases that focal_weight throws negative value, in which case induces NaN values of the loss
-        ### for gammma <1 case.
-        modulating_factor = tf.pow(focal_weight, gamma)
-
-    Result = tf.reduce_sum(alpha_factor * modulating_factor * ce, axis=-1)
-    #Result = tf.nn.relu(Result)
-    # compute the final loss and return
-    return Result
-
-
-class SigmoidFocalCrossEntropy(LossFunctionWrapper):
-    """Implements the focal loss function.
-    Focal loss was first introduced in the RetinaNet paper
-    (https://arxiv.org/pdf/1708.02002.pdf). Focal loss is extremely useful for
-    classification when you have highly imbalanced classes. It down-weights
-    well-classified examples and focuses on hard examples. The loss value is
-    much higher for a sample which is misclassified by the classifier as compared
-    to the loss value corresponding to a well-classified example. One of the
-    best use-cases of focal loss is its usage in object detection where the
-    imbalance between the background class and other classes is extremely high.
-    """
-    def __init__(
-        self,
-        from_logits: bool = False,
-        alpha: FloatTensorLike = 0.25,
-        gamma: FloatTensorLike = 2.0,
-        reduction: str = tf.keras.losses.Reduction.AUTO,
-        
-        name: str = "tfl_sigmoid_focal_crossentropy",
-    ):
-        super().__init__(
-            sigmoid_focal_crossentropy, 
-            name=name,
-            reduction=reduction,
-            from_logits=from_logits,
-            alpha=alpha,
-            gamma=gamma
-        )
-
