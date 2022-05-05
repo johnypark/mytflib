@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="mytflib", # Replace with your own username
-    version="0.0.1.10",
+    version="0.0.1.11",
     author="John Park",
     author_email="parkjohnyc@gmail.com",
     description="My TensorFlow Library",
@@ -14,8 +14,9 @@ setuptools.setup(
     url="https://github.com/johnypark/mytflib",
     packages=setuptools.find_packages(),
     install_requires = ['tensorflow',
-                       'tensorflow_addons',
-                       'opencv-python'],
+                       #'tensorflow_addons',
+                       'opencv-python',
+                       'tensorflow_addons @ git+https://github.com/johnypark/addons#egg=tensorflow_addons'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
