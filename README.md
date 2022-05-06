@@ -1,6 +1,6 @@
 [![PyPI version](https://badge.fury.io/py/mytflib.svg)](https://badge.fury.io/py/mytflib)   [![Downloads](https://pepy.tech/badge/mytflib)](https://pepy.tech/project/mytflib)
 
-My Tensorflow Library is collection of codes writtten for a more fluent tensorflow usage. 
+My Tensorflow Library is utility of codes for better tensorflow usage. It is written to help faster and more efficient training pipeline for big data analysis.
 
 It consist of four main parts:
 
