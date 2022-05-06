@@ -5,7 +5,7 @@ My Tensorflow Library is utility of codes for better tensorflow usage. It is wri
 It consist of four main parts:
 
  1. DataLoader - Loading from pd.Dataframe and TFRecords, with tf.Dataset API 
- 2. Learining rate Tuner and Shaper - LR searcher to find optimal range of LR, and LR shaper for scheduling different shapes of LR trajectories. 
+ 2. Learining rate Tuner and Shaper - LR searcher to find optimal range of LR, and LR shaper for scheduling different shapes of LR trajectories (consine, linear, exponential, tangent, warmup, ...). 
  3. TFRecord Curator - Write, display, and manage TFRecords
  4. Training Manager - Gradient accumulation, Class re-weighting.
 
