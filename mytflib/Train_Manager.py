@@ -72,7 +72,6 @@ def model_config_save(model,
   print("model summary saved to {}. initialization is done".format(txt_file_name))
   
   
-  
 def get_output_path(out_file_name,outPATH, extension = ".csv"):
     ext = extension
     OFname = out_file_name.split(ext)[0]+ext
@@ -93,7 +92,7 @@ def get_output_path(out_file_name,outPATH, extension = ".csv"):
                 print("using filename {} for saving current training task.".format(OFname))
                 NameExistError = False
                 
-        fPATH = os.path.join(oPATH, OFname)
+    fPATH = os.path.join(oPATH, OFname)
         
     return(fPATH)
         
