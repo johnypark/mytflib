@@ -125,9 +125,14 @@ class SaveModelHistory(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         extra_logs = dict()
         extra_logs['learning_rate'] = tf.keras.backend.get_value(self.model.optimizer.learning_rate)
-        extra_logs['momentum'] = tf.keras.backend.get_value(self.model.optimizer.momentum)
+        
         extra_logs['weight_decay'] = tf.keras.backend.get_value(self.model.optimizer.weight_decay)
-
+        
+        try:
+          extra_logs['momentum'] = tf.keras.backend.get_value(self.model.optimizer.momentum)
+        except:
+          no_momentum =True
+        
         for hyperparam, value in extra_logs.items():
           if type(self.model_optim_config[hyperparam]) is dict:
             #print(extra_logs[hyperparam])
