@@ -33,6 +33,7 @@ def change_np_float_to_float(Dict):
         change_np_float_to_float(Dict[key]) ##Recursive in case of nested dictionary
       elif value is not None:
         Dict[key] = float(value) 
+        
   return(Dict)
 
 
@@ -69,6 +70,32 @@ def model_config_save(model,
     with redirect_stdout(f):
         model.summary()
   print("model summary saved to {}. initialization is done".format(txt_file_name))
+  
+  
+  
+def get_output_path(out_file_name,outPATH, extension = ".csv"):
+    ext = extension
+    OFname = out_file_name.split(ext)[0]+ext
+    oPATH = outPATH
+    if (OFname in os.listdir(oPATH)):
+        print("{} already exsits".format(OFname))
+        NameExistError = True
+        OFname =  OFname.split(ext)[0]+"_1"+ext 
+            
+        while NameExistError:
+            if (OFname in os.listdir(oPATH)):
+                print("{} already exsits".format(OFname))
+                raw_name = OFname.split(ext)[0].split("_")[:-1]
+                name_index = re.findall(r'\_\d+\b', OFname)[0].split("_")[1]
+                name_index = str(int(name_index) + 1)
+                OFname ="_".join(raw_name+[name_index])+ext
+            else:
+                print("using filename {} for saving current training task.".format(OFname))
+                NameExistError = False
+                
+        fPATH = os.path.join(oPATH, OFname)
+        
+    return(fPATH)
         
 
 class SaveModelHistory(tf.keras.callbacks.Callback):
@@ -84,25 +111,9 @@ class SaveModelHistory(tf.keras.callbacks.Callback):
         self.config_info = config_info
         self.OFname = outfilename.split(".")[0]+".csv"
         self.oPATH = oPATH
-
-        if (self.OFname in os.listdir(self.oPATH)):
-          print("{} already exsits".format(self.OFname))
-          NameExistError = True
-          self.OFname =  self.OFname.split(".csv")[0]+"_1.csv" 
-          
-          while NameExistError:
-            if (self.OFname in os.listdir(self.oPATH)):
-              print("{} already exsits".format(self.OFname))
-              raw_name = self.OFname.split(".csv")[0].split("_")[:-1]
-              name_index = re.findall(r'\_\d+\b', self.OFname)[0].split("_")[1]
-              name_index = str(int(name_index) + 1)
-              self.OFname ="_".join(raw_name+[name_index])+".csv"
-            else:
-              print("using filename {} for saving current training task.".format(self.OFname))
-              NameExistError = False
-              
-        self.fPATH = os.path.join(self.oPATH, self.OFname)
-        
+        self.fPATH = get_output_path(out_file_name = self.OFname, 
+                                     outPATH = self.oPATH,
+                                     extension = ".csv")
         #Adapted from: https://stackoverflow.com/questions/45199047/how-to-save-model-summary-to-file-in-keras
         
     def on_train_begin(self, logs = None):
