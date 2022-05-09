@@ -103,8 +103,10 @@ class tfrec_feature(object):
 
 
 
-def write_TFrec_from_df_jpeg(DataFrame, iPATH_col, TFREC_structure, dict_hchy, num_dp_per_record, resize_resol, 
+def write_TFrec_from_df_jpeg(DataFrame, iPATH_col, TFREC_structure, dict_hchy, num_dp_per_record, resize_resol,
                               labels_lookup = True, TFREC_name ="TFrec", jpeg_quality = 95):  
+
+    """ resize_resol : list or tuple of (,)"""
     import cv2
     df = DataFrame.sample(frac=1)
     SIZE = num_dp_per_record
@@ -123,7 +125,7 @@ def write_TFrec_from_df_jpeg(DataFrame, iPATH_col, TFREC_structure, dict_hchy, n
         print(); print('Writing TFRecord %i of %i...'%(j,CT))
         CT2 = min(SIZE,len(df)-j*SIZE)
         #CT2 = 1000
-        full_name = TFREC_name+'-res%i-train%.2i-%i.tfrec'%(config_resize,j,CT2)
+        full_name = TFREC_name+'_res%iby%i_%.2i_%i.tfrec'%(config_resize[0],config_resize[1],j,CT2)
         print(full_name)
         with tf.io.TFRecordWriter(full_name) as writer:
             for k in range(CT2):
@@ -131,7 +133,7 @@ def write_TFrec_from_df_jpeg(DataFrame, iPATH_col, TFREC_structure, dict_hchy, n
                 row = df.iloc[cidx]
                 img = cv2.imread(row[iPATH_col])
                 img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR) # Fix incorrect colors
-                img = cv2.resize(img, [config_resize, config_resize])
+                img = cv2.resize(img, config_resize)
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
                 img_bytes = cv2.imencode('.jpg', img, (cv2.IMWRITE_JPEG_QUALITY, TAR_QUALITY))[1].tobytes() #tostring written by chris output [true, values], so take 1.
                 _feature_ = tfrec_feature()
@@ -152,7 +154,6 @@ def write_TFrec_from_df_jpeg(DataFrame, iPATH_col, TFREC_structure, dict_hchy, n
                 
                 writer.write(example)
                 if k%500==0: print(k,', ',end='')
-
 ### Confirm the tfrecord is correctly created ####
 ### tfrec_format is the same as in DataLoader ####
 ### tfrec_format is not the same as tfrec_structure ####
