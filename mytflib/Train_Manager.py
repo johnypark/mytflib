@@ -240,3 +240,90 @@ def ConvertLabelsToInt(ls_labels):
   ls_labels_int = [LookUp[item] for item in ls_labels]
   RevLookUp = zip(ls_labels_int, ls_labels)
   return ls_labels_int, dict(RevLookUp)
+
+  
+### PatristicLoss written by Dr. Damon Little
+class PatristicLoss(tf.keras.losses.Loss):
+	def __init__(self, 
+		batch_size, 
+		g2d = None, 
+		t2g = None):
+		super().__init__()
+		self.genera2distance = g2d
+		self.taxonID2genus = t2g
+		self.batch = batch_size
+
+	def call(self, y_true, y_pred):
+		# weights = tf.ones((settings['batch'], 1), dtype = settings['dtype'])
+		# if 'sample_weight' in kwargs:
+		# 	weights = kwargs.get('sample_weight')
+		#
+		# apply mix to distances
+		#
+		#
+		# faster to use a 'static' tensor and tf.gather?
+		#
+		trueGenera = self.taxonID2genus.lookup(tf.cond(
+			tf.equal(tf.shape(y_true)[1], 4),
+			lambda: tf.reshape(tf.gather(y_true, [0], axis = 1), [-1]), ### true; training; major taxonID
+			lambda: tf.reshape(y_true, [-1]) ### false; testing; taxonID
+		))
+		predictedGenera = self.taxonID2genus.lookup(tf.argmax(y_pred , axis = 1, output_type = tf.int32))
+		pdist = tf.reshape(tf.math.maximum(
+			self.genera2distance.lookup(tf.strings.reduce_join(
+				axis = -1,
+				inputs = tf.stack([trueGenera, predictedGenera], axis = 1),
+				separator = ' <=> '
+			)),
+			self.genera2distance.lookup(tf.strings.reduce_join(
+				axis = -1,
+				inputs = tf.stack([predictedGenera, trueGenera], axis = 1),
+				separator = ' <=> '
+			))
+		), (self.batch, 1))
+		# return tf.constant(0.0)
+		# return tf.zeros((settings['batch'], 1))
+		# tf.print(tf.math.reduce_sum(pdist))
+		return tf.math.reduce_sum(pdist) ### works but includes weights?
+		# return pdist
+		# return tf.math.reduce_sum(tf.math.multiply(pdist, weights))
+
+
+def get_genera2distance(DistanceFilename, data_type):	
+	distance = dict()### 'Genus <=> Genus' => distance
+	with open(DistanceFilename, mode = 'rt') as file:
+		for k, line in enumerate(file):
+			if k > 0:
+				columns = line.rstrip().split('\t')
+				distance[f"{columns[0]} <=> {columns[1]}"] = float(columns[2])
+	genera2distance = tf.lookup.StaticHashTable( ### 'Genus <=> Genus' => distance
+		tf.lookup.KeyValueTensorInitializer(
+			tf.constant(list(distance.keys()), dtype = tf.string), 
+			tf.constant(list(distance.values()), dtype = data_type)
+			),
+		default_value = 0.0
+		)
+	return genera2distance
+
+
+def get_class2genus(ls_class, ls_genus):
+    class2genus = tf.lookup.StaticHashTable( ### taxonID => Genus
+        tf.lookup.KeyValueTensorInitializer(
+            tf.constant(list(ls_class), dtype = tf.int32), 
+            tf.constant(list(ls_genus), dtype = tf.string)
+            ),
+            default_value = 'NOT A GENUS'
+        )
+
+    return class2genus
+
+
+def get_taxonID2genus_from_df(df_PATH, keycol, valcol):
+    import pandas as pd
+    df = pd.read_table(df_PATH)
+    S_scif = sorted(set(df[keycol]))
+    mapping_scif2int = dict(zip(S_scif, range(len(S_scif))))
+    df_by_scif = df.groupby(keycol, as_index= False).first() 
+    ls_class = [mapping_scif2int[ele] for ele in df_by_scif[keycol]]
+    ls_genus = [ele for ele in df_by_scif[valcol]]
+    return get_class2genus(ls_class, ls_genus)
