@@ -27,10 +27,13 @@ from contextlib import redirect_stdout
 
 def change_np_float_to_float(Dict):
     
-  for key,value in Dict.items():
+  for key, value in Dict.items():
     if type(value) not in [str, float, bool]:
       if type(value) is dict:
         change_np_float_to_float(Dict[key]) ##Recursive in case of nested dictionary
+      elif type(value) is type(tf.lookup.StaticHashTable(tf.lookup.KeyValueTensorInitializer(
+    tf.constant(0), tf.constant(0)),default_value = 0)):
+        Dict[key] = float(value.size().numpy())
       elif value is not None:
         Dict[key] = float(value) 
         
@@ -285,7 +288,7 @@ class PatristicLoss(tf.keras.losses.Loss):
 		# return tf.constant(0.0)
 		# return tf.zeros((settings['batch'], 1))
 		# tf.print(tf.math.reduce_sum(pdist))
-		return tf.math.reduce_sum(pdist) ### works but includes weights?
+		return pdist #tf.math.reduce_sum(pdist) ### works but includes weights?
 		# return pdist
 		# return tf.math.reduce_sum(tf.math.multiply(pdist, weights))
 
@@ -328,3 +331,77 @@ def get_taxonID2genus_from_df(df_PATH, keycol, valcol):
     ls_class = [mapping_scif2int[ele] for ele in df_by_scif[keycol]]
     ls_genus = [ele for ele in df_by_scif[valcol]]
     return get_class2genus(ls_class, ls_genus)
+
+def categorical_crossentropy(target, output, from_logits=False, axis=-1):
+  """Categorical crossentropy between an output tensor and a target tensor.
+  Args:
+      target: A tensor of the same shape as `output`.
+      output: A tensor resulting from a softmax
+          (unless `from_logits` is True, in which
+          case `output` is expected to be the logits).
+      from_logits: Boolean, whether `output` is the
+          result of a softmax, or is a tensor of logits.
+      axis: Int specifying the channels axis. `axis=-1` corresponds to data
+          format `channels_last`, and `axis=1` corresponds to data format
+          `channels_first`.
+  Returns:
+      Output tensor.
+  Raises:
+      ValueError: if `axis` is neither -1 nor one of the axes of `output`.
+  Example:
+  >>> a = tf.constant([1., 0., 0., 0., 1., 0., 0., 0., 1.], shape=[3,3])
+  >>> print(a)
+  tf.Tensor(
+    [[1. 0. 0.]
+     [0. 1. 0.]
+     [0. 0. 1.]], shape=(3, 3), dtype=float32)
+  >>> b = tf.constant([.9, .05, .05, .05, .89, .06, .05, .01, .94], shape=[3,3])
+  >>> print(b)
+  tf.Tensor(
+    [[0.9  0.05 0.05]
+     [0.05 0.89 0.06]
+     [0.05 0.01 0.94]], shape=(3, 3), dtype=float32)
+  >>> loss = tf.keras.backend.categorical_crossentropy(a, b)
+  >>> print(np.around(loss, 5))
+  [0.10536 0.11653 0.06188]
+  >>> loss = tf.keras.backend.categorical_crossentropy(a, a)
+  >>> print(np.around(loss, 5))
+  [0. 0. 0.]
+  """
+  target = tf.convert_to_tensor(target)
+  output = tf.convert_to_tensor(output)
+  target.shape.assert_is_compatible_with(output.shape)
+
+  # Use logits whenever they are available. `softmax` and `sigmoid`
+  # activations cache logits on the `output` Tensor.
+  if hasattr(output, '_keras_logits'):
+    output = output._keras_logits  # pylint: disable=protected-access
+    if from_logits:
+      warnings.warn(
+          '"`categorical_crossentropy` received `from_logits=True`, but '
+          'the `output` argument was produced by a sigmoid or softmax '
+          'activation and thus does not represent logits. Was this intended?"',
+          stacklevel=2)
+    from_logits = True
+
+  if from_logits:
+    return tf.nn.softmax_cross_entropy_with_logits(
+        labels=target, logits=output, axis=axis)
+
+  if (not isinstance(output, (tf.__internal__.EagerTensor, tf.Variable)) and
+      output.op.type == 'Softmax') and not hasattr(output, '_keras_history'):
+    # When softmax activation function is used for output operation, we
+    # use logits from the softmax function directly to compute loss in order
+    # to prevent collapsing zero when training.
+    # See b/117284466
+    assert len(output.op.inputs) == 1
+    output = output.op.inputs[0]
+    return tf.nn.softmax_cross_entropy_with_logits(
+        labels=target, logits=output, axis=axis)
+
+  # scale preds so that the class probas of each sample sum to 1
+  output = output / tf.reduce_sum(output, axis, True)
+  # Compute cross entropy from probabilities.
+  epsilon_ = _constant_to_tensor(epsilon(), output.dtype.base_dtype)
+  output = tf.clip_by_value(output, epsilon_, 1. - epsilon_)
+  return -tf.reduce_sum(target * tf.math.log(output), axis)
