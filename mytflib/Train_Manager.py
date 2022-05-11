@@ -247,7 +247,8 @@ class PatristicLoss(tf.keras.losses.Loss):
 	def __init__(self, 
 		batch_size, 
 		g2d = None, 
-		t2g = None):
+		t2g = None,
+    name='Patristic_Distance'):
 		super().__init__()
 		self.genera2distance = g2d
 		self.taxonID2genus = t2g
@@ -263,11 +264,11 @@ class PatristicLoss(tf.keras.losses.Loss):
 		#
 		# faster to use a 'static' tensor and tf.gather?
 		#
-		trueGenera = self.taxonID2genus.lookup(tf.cond(
-			tf.equal(tf.shape(y_true)[1], 4),
-			lambda: tf.reshape(tf.gather(y_true, [0], axis = 1), [-1]), ### true; training; major taxonID
-			lambda: tf.reshape(y_true, [-1]) ### false; testing; taxonID
-		))
+		trueGenera = self.taxonID2genus.lookup(tf.argmax(y_true , axis = 1, output_type = tf.int32)) #self.taxonID2genus.lookup(tf.cond(
+			#tf.equal(tf.shape(y_true)[1], 4),
+			#lambda: tf.reshape(tf.gather(y_true, [0], axis = 1), [-1]), ### true; training; major taxonID
+			#lambda: tf.reshape(y_true, [-1]) ### false; testing; taxonID
+		#))
 		predictedGenera = self.taxonID2genus.lookup(tf.argmax(y_pred , axis = 1, output_type = tf.int32))
 		pdist = tf.reshape(tf.math.maximum(
 			self.genera2distance.lookup(tf.strings.reduce_join(
