@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Implements Focal loss."""
+"""Implements Focal loss. Adapted from tensorflow-addons, fixed several things. """
 
 import tensorflow as tf
 import tensorflow.keras.backend as K
