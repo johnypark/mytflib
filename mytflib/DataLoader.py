@@ -68,14 +68,15 @@ def parse_tfrecord_fn(example, TFREC_FORMAT):
     return example
 
 
-def decode_image(image_data_bytes):
+def decode_image(image_data_bytes, TFREC_SIZE):
 
     img = tf.io.decode_jpeg(image_data_bytes, channels=3)  # image format uint8 [0,255]
-    img = tf.cast(img, tf.float32) / 255.0
+    img = tf.reshape(img, [*TFREC_SIZE, 3])
+    img = tf.cast(img, dtype = tf.float32) / 255.0
     return img
 
 
-def read_tfrecord(example, TFREC_FORMAT, LABEL_NAME, IMAGE_NAME="image"):
+def read_tfrecord(example, TFREC_FORMAT, TFREC_SIZES, LABEL_NAME, IMAGE_NAME="image"):
 
     LABELED_TFREC_FORMAT = TFREC_FORMAT
     #{ EXAMPLE OF TFREC FORMAT 
@@ -86,13 +87,13 @@ def read_tfrecord(example, TFREC_FORMAT, LABEL_NAME, IMAGE_NAME="image"):
     #    "family": tf.io.FixedLenFeature([], tf.int64)
     #}
     example = tf.io.parse_single_example(example, LABELED_TFREC_FORMAT)
-    image = decode_image(example[IMAGE_NAME])
+    image = decode_image(example[IMAGE_NAME], TFREC_SIZES = TFREC_SIZES)
     label = example[LABEL_NAME]
     #hierarchy = how can you get the hierarchy? 
     return image, label
 
 
-def load_tfrec_dataset(filenames, tfrec_format, label_name, image_key, labeled=True, ordered=False):
+def load_tfrec_dataset(filenames, tfrec_sizes, tfrec_format, label_name, image_key,  labeled=True, ordered=False):
     # Read from TFRecords. For optimal performance, reading from multiple files at once and
     # disregarding data order. Order does not matter since we will be shuffling the data anyway.
     ignore_order = tf.data.Options()
@@ -101,6 +102,7 @@ def load_tfrec_dataset(filenames, tfrec_format, label_name, image_key, labeled=T
     dataset = tf.data.TFRecordDataset(filenames, num_parallel_reads=AUTO) # automatically interleaves reads from multiple files
     dataset = dataset.with_options(ignore_order) # uses data as soon as it streams in, rather than in its original order
     dataset = dataset.map(lambda Example: read_tfrecord(Example, 
+                                                        TFREC_SIZES = tfrec_sizes,
                                                         TFREC_FORMAT = tfrec_format,
                                                         LABEL_NAME = label_name,
                                                         IMAGE_NAME = image_key))# if labeled else read_unlabeled_tfrecord, num_parallel_calls=AUTO)
@@ -129,7 +131,7 @@ def augment_images(image, label, resize_factor):
     
     max_angle=tf.constant(np.pi/6)
     img = tf.image.random_flip_left_right(image)
-    img = tfa.image.rotate(img,angles=max_angle*tf.random.uniform([1], minval=-1, maxval=1, dtype=tf.dtypes.float32)) # added random rotation, 30 degrees each side
+    img = tfa.image.rotate(img, angles=max_angle*tf.random.uniform([1], minval=-1, maxval=1, dtype=tf.dtypes.float32)) # added random rotation, 30 degrees each side
     img = tf.image.central_crop(image, central_fraction = 0.9)
     img = tf.image.resize( img, size = resize_factor)
     return img, label
@@ -154,7 +156,7 @@ def get_train_ds_tfrec_from_dict(config_dict, label_name, image_key = "image", D
     
     LS_FILENAMES =  config_dict["ls_train_files"]
     TFREC_DICT =  config_dict["tfrec_structure"]
-    #TFREC_SIZES =  config_dict["tfrec_shape"]
+    TFREC_SIZES =  config_dict["tfrec_shape"]
     RESIZE_FACTOR =  config_dict["resize_resol"]
     NUM_CLASSES =  config_dict["N_cls"]
     BATCH_SIZE =  config_dict["batch_size"]
@@ -162,7 +164,7 @@ def get_train_ds_tfrec_from_dict(config_dict, label_name, image_key = "image", D
     tfrec_format = tfrec_format_generator(TFREC_DICT)
     dataset = load_tfrec_dataset(LS_FILENAMES, 
                                  tfrec_format = tfrec_format, 
-                                 #tfrec_sizes = TFREC_SIZES,
+                                 tfrec_sizes = TFREC_SIZES,
                                  label_name = label_name,
                                  image_key = image_key)
     
