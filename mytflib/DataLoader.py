@@ -195,7 +195,7 @@ def get_vali_ds_tfrec_from_dict(config_dict, label_name,  image_key = "image", M
     
     LS_FILENAMES =  config_dict["ls_vali_files"]
     TFREC_DICT =  config_dict["tfrec_structure"]
-    #TFREC_SIZES =  config_dict["tfrec_shape"]
+    TFREC_SIZES =  config_dict["tfrec_shape"]
     RESIZE_FACTOR =  config_dict["resize_resol"]
     NUM_CLASSES =  config_dict["N_cls"]
     BATCH_SIZE =  config_dict["batch_size"]
@@ -203,7 +203,7 @@ def get_vali_ds_tfrec_from_dict(config_dict, label_name,  image_key = "image", M
     tfrec_format = tfrec_format_generator(TFREC_DICT)
     dataset = load_tfrec_dataset(LS_FILENAMES, 
                                  tfrec_format = tfrec_format, 
-                                 #tfrec_sizes = TFREC_SIZES,
+                                 tfrec_sizes = TFREC_SIZES,
                                  label_name = label_name,
                                  image_key = image_key)
     
