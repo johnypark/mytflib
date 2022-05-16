@@ -16,7 +16,8 @@ setuptools.setup(
     install_requires = ['tensorflow',
                        'opencv-python',
                        'tensorflow-addons',
-                        'one_cycle_tf @ git+https://github.com/johnypark/one_cycle_scheduler_tf'],
+                        'one_cycle_tf @ git+https://github.com/johnypark/one_cycle_scheduler_tf',
+                        'typeguard'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
