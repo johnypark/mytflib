@@ -16,6 +16,8 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import tensorflow as tf
+import numpy as np
+
 
 class CyclicalExpLR(tf.keras.optimizers.schedules.LearningRateSchedule):
       
