@@ -37,23 +37,25 @@ class EpochBasedScheduler:
 
 #https://stackoverflow.com/questions/65905991/learning-rate-callback-on-step-rather-than-epoch
 class UpdateLR_byStep(tf.keras.callbacks.Callback):
-    def __init__(self, schedule, steps_per_epoch):
+    def __init__(self, schedule, steps_per_epoch, pickup=None):
         super(UpdateLR_byStep, self).__init__()
         self.schedule = schedule
         self.epoch = 0
         self.steps_per_epoch = steps_per_epoch
+        if pickup:
+          self.epoch = pickup
         
     def on_batch_begin(self, batch, logs=None):
         actual_step = (self.epoch*self.steps_per_epoch) + batch
         scheduled_lr = self.schedule(actual_step)
         tf.keras.backend.set_value(self.model.optimizer.lr, scheduled_lr)
         if batch == 0:
-            print("--Learning Rate: {:.6f} --".format(scheduled_lr))
+            print("--Learning Rate: {:.3g} --".format(scheduled_lr))
         self.scheduled_lr = scheduled_lr
         
     def on_epoch_end(self, epoch, logs=None):
-        message = '  LR: {}.'.format(self.scheduled_lr)
-        sys.stdout.write(message + "\n")
+        #message = '  LR: {}.'.format(self.scheduled_lr)
+        #sys.stdout.write(message + "\n")
         self.epoch+=1
 
 
