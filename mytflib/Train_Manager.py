@@ -228,6 +228,9 @@ def class_balanced_weight(labels, max_range):
     Returns:
       _type_: list of class weights indexed by integer number of each class. They are reweighted that sums of the weights equalts to N_class, \
         so it could yield comparable loss value to no weight case. 
+    
+    Citation:
+    "Class-Balanced Loss Based on Effective Number of Samples", by Yin Cui et al. 2019. CVPR.
     """
   
     import numpy as np
