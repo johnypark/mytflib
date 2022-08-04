@@ -22,8 +22,7 @@ from tensorflow_addons.utils.keras_utils import LossFunctionWrapper
 from tensorflow_addons.utils.types import FloatTensorLike, TensorLike
 
 
-@tf.keras.utils.register_keras_serializable(package="Addons")
-class SigmoidFocalCrossEntropy(LossFunctionWrapper):
+class SigmoidFocalCrossEntropy2(LossFunctionWrapper):
     """Implements the focal loss function.
 
     Focal loss was first introduced in the RetinaNet paper
@@ -62,7 +61,6 @@ class SigmoidFocalCrossEntropy(LossFunctionWrapper):
           `gamma` is less than zero.
     """
 
-    @typechecked
     def __init__(
         self,
         from_logits: bool = False,
@@ -72,7 +70,7 @@ class SigmoidFocalCrossEntropy(LossFunctionWrapper):
         name: str = "sigmoid_focal_crossentropy",
     ):
         super().__init__(
-            sigmoid_focal_crossentropy,
+            sigmoid_focal_crossentropy2,
             name=name,
             reduction=reduction,
             from_logits=from_logits,
@@ -81,9 +79,7 @@ class SigmoidFocalCrossEntropy(LossFunctionWrapper):
         )
 
 
-@tf.keras.utils.register_keras_serializable(package="Addons")
-@tf.function
-def sigmoid_focal_crossentropy(
+def sigmoid_focal_crossentropy2(
     y_true: TensorLike,
     y_pred: TensorLike,
     alpha: FloatTensorLike = 0.25,
