@@ -148,7 +148,7 @@ def get_train_ds_tfrec(LS_FILENAMES, TFREC_DICT, TFREC_SIZES, RESIZE_FACTOR, NUM
     if DataRepeat == True:
         dataset = dataset.repeat()
     dataset = dataset.shuffle(Nsuffle)
-    dataset = dataset.batch(BATCH_SIZE)
+    dataset = dataset.batch(BATCH_SIZE,drop_remainder=True)
     dataset = dataset.prefetch(AUTO) # prefetch next batch while training (autotune prefetch buffer size)
     return dataset
 
@@ -174,7 +174,7 @@ def get_train_ds_tfrec_from_dict(config_dict, label_name, image_key = "image", D
     if DataRepeat == True:
         dataset = dataset.repeat()
     dataset = dataset.shuffle(Nsuffle)
-    dataset = dataset.batch(BATCH_SIZE)
+    dataset = dataset.batch(BATCH_SIZE, drop_remainder=True)
     dataset = dataset.prefetch(AUTO) # prefetch next batch while training (autotune prefetch buffer size)
     return dataset
 
@@ -185,7 +185,7 @@ def get_vali_ds_tfrec(LS_FILENAMES, TFREC_DICT, TFREC_SIZES, RESIZE_FACTOR, NUM_
     dataset = dataset.map(lambda image, label: onehot(image, label, n_cls = NUM_CLASSES), num_parallel_calls=AUTO)
     dataset = dataset.map(normalize_RGB, num_parallel_calls=AUTO).prefetch(AUTO)
     dataset = dataset.map(lambda image, label: augment_images(image, label, resize_factor = RESIZE_FACTOR), num_parallel_calls=AUTO)
-    dataset = dataset.batch(BATCH_SIZE)
+    dataset = dataset.batch(BATCH_SIZE, drop_remainder=True)
     dataset = dataset.cache()
     dataset = dataset.prefetch(AUTO) # prefetch next batch while training (autotune prefetch buffer size)
     return dataset
@@ -210,7 +210,7 @@ def get_vali_ds_tfrec_from_dict(config_dict, label_name,  image_key = "image", M
     dataset = dataset.map(lambda image, label: onehot(image, label, n_cls = NUM_CLASSES), num_parallel_calls=AUTO)
     dataset = dataset.map(normalize_RGB, num_parallel_calls=AUTO).prefetch(AUTO)
     dataset = dataset.map(lambda image, label: augment_images(image, label, resize_factor = RESIZE_FACTOR), num_parallel_calls=AUTO)
-    dataset = dataset.batch(BATCH_SIZE)
+    dataset = dataset.batch(BATCH_SIZE, drop_remainder=True)
     dataset = dataset.cache()
     dataset = dataset.prefetch(AUTO) # prefetch next batch while training (autotune prefetch buffer size)
     return dataset
