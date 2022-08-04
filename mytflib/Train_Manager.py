@@ -275,8 +275,8 @@ def GetDictCls(GivenWeight):
 
 def ConvertLabelsToInt(ls_labels):
     
-  if type(ls_labels) is not list:
-    print("error! input is not a list")
+  #if type(ls_labels) is not list:
+  #  print("error! input is not a list")
   Ordered = sorted(set(ls_labels))
   i = 0
   LookUp = dict()
