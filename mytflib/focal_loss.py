@@ -68,7 +68,10 @@ class SigmoidFocalCrossEntropy2(LossFunctionWrapper):
         gamma: FloatTensorLike = 2.0,
         reduction: str = tf.keras.losses.Reduction.AUTO,
         name: str = "sigmoid_focal_crossentropy",
+        label_smoothing: FloatTensorLike = 0,
+        **kwargs
     ):
+        
         super().__init__(
             sigmoid_focal_crossentropy2,
             name=name,
@@ -76,6 +79,7 @@ class SigmoidFocalCrossEntropy2(LossFunctionWrapper):
             from_logits=from_logits,
             alpha=alpha,
             gamma=gamma,
+            label_smoothing = label_smoothing
         )
 
 
@@ -85,6 +89,7 @@ def sigmoid_focal_crossentropy2(
     alpha: FloatTensorLike = 0.25,
     gamma: FloatTensorLike = 2.0,
     from_logits: bool = False,
+    label_smoothing: FloatTensorLike = 0
 ) -> tf.Tensor:
     """Implements the focal loss function.
 
@@ -112,6 +117,9 @@ def sigmoid_focal_crossentropy2(
 
     y_pred = tf.convert_to_tensor(y_pred)
     y_true = tf.cast(y_true, dtype=y_pred.dtype)
+    
+    if label_smoothing:
+        y_true = y_true * (1.0 - label_smoothing) + 0.5 * label_smoothing
 
     # Get the cross_entropy for each entry
     ce = K.binary_crossentropy(y_true, y_pred, from_logits=from_logits)
@@ -125,7 +133,7 @@ def sigmoid_focal_crossentropy2(
     p_t = (y_true * pred_prob) + ((1 - y_true) * (1 - pred_prob))
     alpha_factor = 1.0
     modulating_factor = 1.0
-
+    
     if alpha:
         alpha = tf.cast(alpha, dtype=y_true.dtype)
         alpha_factor = y_true * alpha + (1 - y_true) * (1 - alpha)

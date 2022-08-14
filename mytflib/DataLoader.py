@@ -174,7 +174,7 @@ def get_train_ds_tfrec_from_dict(config_dict, label_name, image_key = "image", D
     if DataRepeat == True:
         dataset = dataset.repeat()
     dataset = dataset.shuffle(Nsuffle)
-    dataset = dataset.batch(BATCH_SIZE, drop_remainder=True)
+    dataset = dataset.batch(BATCH_SIZE, drop_remainder=True) # set drop remainder true for kecam test
     dataset = dataset.prefetch(AUTO) # prefetch next batch while training (autotune prefetch buffer size)
     return dataset
 
