@@ -154,7 +154,7 @@ def get_train_ds_tfrec(LS_FILENAMES, TFREC_DICT, TFREC_SIZES, RESIZE_FACTOR, NUM
     dataset = dataset.prefetch(AUTO) # prefetch next batch while training (autotune prefetch buffer size)
     return dataset
 
-def get_train_ds_tfrec_from_dict(config_dict, label_name, image_key = "image", DataRepeat = False, AugmentLayer = False, Nsuffle = 2048):
+def get_train_ds_tfrec_from_dict(config_dict, label_name, image_key = "image", imagenet_normalize = True, DataRepeat = False, AugmentLayer = False, Nsuffle = 2048):
     
     LS_FILENAMES =  config_dict["ls_train_files"]
     TFREC_DICT =  config_dict["tfrec_structure"]
@@ -174,7 +174,8 @@ def get_train_ds_tfrec_from_dict(config_dict, label_name, image_key = "image", D
     dataset = dataset.map(lambda image, label: augment_images(image, label, resize_factor = RESIZE_FACTOR), num_parallel_calls=AUTO)
     if AugmentLayer:
         dataset = dataset.map(lambda image, label: (AugmentLayer(image), label), num_parallel_calls=AUTO).prefetch(AUTO)
-    dataset = dataset.map(normalize_RGB, num_parallel_calls=AUTO).prefetch(AUTO)
+    if imagenet_normalize:
+        dataset = dataset.map(normalize_RGB, num_parallel_calls=AUTO).prefetch(AUTO)
     if DataRepeat == True:
         dataset = dataset.repeat()
     dataset = dataset.shuffle(Nsuffle)
@@ -182,12 +183,13 @@ def get_train_ds_tfrec_from_dict(config_dict, label_name, image_key = "image", D
     dataset = dataset.prefetch(AUTO) # prefetch next batch while training (autotune prefetch buffer size)
     return dataset
 
-def get_vali_ds_tfrec(LS_FILENAMES, TFREC_DICT, TFREC_SIZES, RESIZE_FACTOR, NUM_CLASSES, BATCH_SIZE, AugmentLayer = False):
+def get_vali_ds_tfrec(LS_FILENAMES, TFREC_DICT, TFREC_SIZES, RESIZE_FACTOR, NUM_CLASSES, BATCH_SIZE, imagenet_normalize = True, AugmentLayer = False):
 
     tfrec_format = tfrec_format_generator(TFREC_DICT)
     dataset = load_tfrec_dataset(LS_FILENAMES, tfrec_format = tfrec_format, tfrec_sizes = TFREC_SIZES)
     dataset = dataset.map(lambda image, label: onehot(image, label, n_cls = NUM_CLASSES), num_parallel_calls=AUTO)
-    dataset = dataset.map(normalize_RGB, num_parallel_calls=AUTO).prefetch(AUTO)
+    if imagenet_normalize:
+        dataset = dataset.map(normalize_RGB, num_parallel_calls=AUTO).prefetch(AUTO)
     dataset = dataset.map(lambda image, label: augment_images(image, label, resize_factor = RESIZE_FACTOR), num_parallel_calls=AUTO)
     dataset = dataset.batch(BATCH_SIZE, drop_remainder=True)
     dataset = dataset.cache()
