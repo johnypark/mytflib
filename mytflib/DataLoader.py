@@ -154,7 +154,13 @@ def get_train_ds_tfrec(LS_FILENAMES, TFREC_DICT, TFREC_SIZES, RESIZE_FACTOR, NUM
     dataset = dataset.prefetch(AUTO) # prefetch next batch while training (autotune prefetch buffer size)
     return dataset
 
-def get_train_ds_tfrec_from_dict(config_dict, label_name, image_key = "image", imagenet_normalize = True, DataRepeat = False, AugmentLayer = False, Nsuffle = 2048):
+def get_train_ds_tfrec_from_dict(config_dict, 
+                                 label_name, 
+                                 image_key = "image", 
+                                 imagenet_normalize = True, 
+                                 DataRepeat = False, 
+                                 AugmentLayer = False, 
+                                 Nsuffle = 2048):
     
     LS_FILENAMES =  config_dict["ls_train_files"]
     TFREC_DICT =  config_dict["tfrec_structure"]
