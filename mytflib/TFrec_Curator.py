@@ -110,6 +110,7 @@ def write_TFrec_from_df_jpeg(DataFrame,
                               resize_resol,
                               dict_hchy, 
                               usage,
+                              split_folder = False,
                               labels_lookup = True, TFREC_name ="TFrec", jpeg_quality = 95):  
 
     """ resize_resol : list or tuple of (,)"""
@@ -160,8 +161,12 @@ def write_TFrec_from_df_jpeg(DataFrame,
                       _feature_.add_feature(key, row[key], _int64_feature)
                   
                   elif value == "str":
-                    _feature_.add_feature(key, bytes(row[key], 'utf-8'), _bytes_feature)
-              
+                    if split_folder:
+                      _feature_.add_feature(key, bytes(row[key].split("\\")[-1], 'utf-8'), _bytes_feature)
+                    else:
+                      _feature_.add_feature(key, bytes(row[key], 'utf-8'), _bytes_feature)
+                    
+
                 example =_feature_.serialize_example()
                 
                 writer.write(example)
