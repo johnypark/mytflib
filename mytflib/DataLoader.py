@@ -315,6 +315,7 @@ def get_mat(rotation, shear, zoom_hw, shift_hw ):
     
     return K.dot(rotation_matrix, affine_matrix)
 
+# how to do reflection??
 
 def transform(image, rotate = 0, shear = 0, zoom = 1, shift_hw = [0,0]):
     import math
@@ -347,7 +348,8 @@ def transform(image, rotate = 0, shear = 0, zoom = 1, shift_hw = [0,0]):
         
     return tf.reshape(d,[DIM,DIM,3])
 
-
+### Change this to image processing Layer! 
+### Q. Batch time, how many random initializations are done?
 class image_transform():
   import numpy as np
   def __init__(self,
