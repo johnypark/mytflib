@@ -135,12 +135,12 @@ def normalize_RGB(image, label):
     return image, label
 
 
-def augment_images(image, label, resize_factor):
+def augment_images(image, label, resize_factor, crop_ratio = 0.9):
     
-    max_angle=tf.constant(np.pi/6)
-    img = tf.image.random_flip_left_right(image)
-    img = tfa.image.rotate(img, angles=max_angle*tf.random.uniform([1], minval=-1, maxval=1, dtype=tf.dtypes.float32)) # added random rotation, 30 degrees each side
-    img = tf.image.central_crop(image, central_fraction = 0.9)
+    #max_angle=tf.constant(np.pi/6)
+    #img = tf.image.random_flip_left_right(image)
+    #img = tfa.image.rotate(img, angles=max_angle*tf.random.uniform([1], minval=-1, maxval=1, dtype=tf.dtypes.float32)) # added random rotation, 30 degrees each side
+    img = tf.image.central_crop(image, central_fraction = crop_ratio)
     img = tf.image.resize( img, size = resize_factor)
     return img, label
 
@@ -185,6 +185,12 @@ def get_train_ds_tfrec_from_dict(config_dict,
     NUM_CLASSES =  config_dict["N_cls"]
     BATCH_SIZE =  config_dict["batch_size"]
     
+    if config_dict["crop_ratio"]:
+        CROP_RATIO = config_dict["crop_ratio"]
+    else:
+        CROP_RATIO = 0.9
+        
+    
     tfrec_format = tfrec_format_generator(TFREC_DICT)
     dataset = load_tfrec_dataset(LS_FILENAMES, 
                                  tfrec_format = tfrec_format, 
@@ -195,7 +201,9 @@ def get_train_ds_tfrec_from_dict(config_dict,
     dataset = dataset.map(lambda image, label: onehot(image, label, n_cls = NUM_CLASSES), num_parallel_calls=AUTO)
     if AugmentLayer:
         dataset = dataset.map(lambda image, label: (AugmentLayer(image), label), num_parallel_calls=AUTO).prefetch(AUTO)
-    dataset = dataset.map(lambda image, label: augment_images(image, label, resize_factor = RESIZE_FACTOR), num_parallel_calls=AUTO).prefetch(AUTO)
+    dataset = dataset.map(lambda image, label: augment_images(image, label, 
+                                                              resize_factor = RESIZE_FACTOR, 
+                                                              crop_ratio = CROP_RATIO), num_parallel_calls=AUTO).prefetch(AUTO)
     if imagenet_normalize:
         dataset = dataset.map(normalize_RGB, num_parallel_calls=AUTO).prefetch(AUTO)
     if DataRepeat == True:
@@ -227,6 +235,7 @@ def get_vali_ds_tfrec_from_dict(config_dict, label_name,  image_key = "image", A
     RESIZE_FACTOR =  config_dict["resize_resol"]
     NUM_CLASSES =  config_dict["N_cls"]
     BATCH_SIZE =  config_dict["batch_size"]
+    
     
     tfrec_format = tfrec_format_generator(TFREC_DICT)
     dataset = load_tfrec_dataset(LS_FILENAMES, 
