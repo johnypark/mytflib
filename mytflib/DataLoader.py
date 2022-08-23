@@ -279,6 +279,94 @@ def get_ds_tfrec_from_dict(tfrec_PATH, TFREC_DICT):
     parsed_dataset = raw_dataset.map(lambda x : parse_tfrecord_fn(x, tfrec_format))
     
     return parsed_dataset
+
+### Affine transform, similarity trwansform, rigid transform
+### Modified the code from kaggle notebookL source
+import tensorflow.keras.backend as K
+
+def get_mat(rotation, shear, zoom_hw, shift_hw ):
+    import math
+    # returns 3x3 transformmatrix which transforms indicies
+    height_zoom, width_zoom = zoom_hw
+    height_shift, width_shift =shift_hw
+    height_shift = tf.constant([height_shift],dtype='float32')
+    width_shift = tf.constant([width_shift],dtype='float32')
+
+    # CONVERT DEGREES TO RADIANS
+    rotation = tf.reshape(float(math.pi * rotation / 180.),[1])
+    shear = tf.reshape(float(math.pi * shear / 180.),[1])
+    
+    # ROTATION MATRIX
+    c1 = tf.math.cos(rotation)
+    s1 = tf.math.sin(rotation)
+    one = tf.constant([1],dtype='float32')
+    zero = tf.constant([0],dtype='float32')
+    rotation_matrix = tf.reshape( tf.concat([c1,s1,zero, -s1,c1,zero, zero,zero,one],axis=0),[3,3] )
+        
+    # SHEAR MATRIX
+    c2 = tf.math.cos(shear)
+    s2 = tf.math.sin(shear)
+    affine_matrix = tf.reshape( 
+                      tf.concat([one/height_zoom, zero, height_shift, 
+                                zero, one/width_zoom, width_shift, 
+                                zero, zero, one],
+                                         axis=0),
+                              [3,3] )    
+    
+    return K.dot(rotation_matrix, affine_matrix)
+
+
+def transform(image, rotate = 0, shear = 0, zoom = 1, shift_hw = [0,0]):
+    import math
+    # input image - is one image of size [dim,dim,3] not a batch of [b,dim,dim,3]
+    # output - image randomly rotated, sheared, zoomed, and shifted
+    DIM = image.shape[0]
+    print(DIM)
+    XDIM = DIM%2 #fix for size 331
+    
+    rot = rotate 
+    shr = shear
+    h_shift, w_shift = shift_hw
+    # GET TRANSFORMATION MATRIX
+    m = get_mat(rot,shr,[zoom,zoom],[h_shift,w_shift]) 
+
+    # LIST DESTINATION PIXEL INDICES
+    x = tf.repeat( tf.range(DIM//2,-DIM//2,-1), DIM )
+    y = tf.tile( tf.range(-DIM//2,DIM//2),[DIM] )
+    z = tf.ones([DIM*DIM],dtype='int32')
+    idx = tf.stack( [x,y,z] )
+    
+    # ROTATE DESTINATION PIXELS ONTO ORIGIN PIXELS
+    idx2 = K.dot(m,tf.cast(idx,dtype='float32'))
+    idx2 = K.cast(idx2,dtype='int32')
+    idx2 = K.clip(idx2,-DIM//2+XDIM+1,DIM//2)
+    
+    # FIND ORIGIN PIXEL VALUES           
+    idx3 = tf.stack( [DIM//2-idx2[0,], DIM//2-1+idx2[1,]] )
+    d = tf.gather_nd(image,tf.transpose(idx3))
+        
+    return tf.reshape(d,[DIM,DIM,3])
+
+
+class image_transform():
+  import numpy as np
+  def __init__(self,
+               rotate = 0,
+               shift_hw = [0,0],
+                zoom = 1,
+               shear = 0):
+    self.rotate  = rotate
+    self.shift_hw = shift_hw
+    self.zoom = zoom
+    self.shear = shear
+
+  def __call__(self, image):
+    im = transform(image,
+              rotate = self.rotate *np.random.normal(size = 1),
+              shift_hw = self.shift_hw* np.random.normal(size = 2),
+              zoom = np.random.uniform(1, self.zoom, size=1), 
+              shear = self.shear)
+    return im
     
     
     
