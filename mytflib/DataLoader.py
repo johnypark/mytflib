@@ -137,7 +137,15 @@ def augment_images(image, label, resize_factor):
     return img, label
 
 
-def get_train_ds_tfrec(LS_FILENAMES, TFREC_DICT, TFREC_SIZES, RESIZE_FACTOR, NUM_CLASSES, BATCH_SIZE, DataRepeat = False, AugmentLayer = False, Nsuffle = 2048):
+def get_train_ds_tfrec(LS_FILENAMES, 
+                       TFREC_DICT, 
+                       TFREC_SIZES, 
+                       RESIZE_FACTOR, 
+                       NUM_CLASSES, 
+                       BATCH_SIZE, 
+                       DataRepeat = False, 
+                       AugmentLayer = False, 
+                       Nsuffle = 2048):
 
     tfrec_format = tfrec_format_generator(TFREC_DICT)
     dataset = load_tfrec_dataset(LS_FILENAMES, tfrec_format = tfrec_format, tfrec_sizes = TFREC_SIZES)
@@ -241,6 +249,22 @@ def get_filenames(DS_PATH):
     NUM_VALIDATION_IMAGES = count_dps_in_tfrec(VALIDATION_FILENAMES)
     print('Dataset: {} training images, {} validation images'.format(NUM_TRAINING_IMAGES, NUM_VALIDATION_IMAGES))
     return TRAINING_FILENAMES, VALIDATION_FILENAMES, NUM_TRAINING_IMAGES
+
+def get_ds_tfrec_from_dict(tfrec_PATH, TFREC_DICT):
+
+    tfrec_format = tfrec_format_generator(TFREC_DICT)
+    raw_dataset = tf.data.TFRecordDataset(tfrec_PATH)
+    
+    def parse_tfrecord_fn(example, TFREC_FORMAT):    
+        example = tf.io.parse_single_example(example, TFREC_FORMAT)
+        example["image"] = tf.io.decode_jpeg(example["image"], channels=3)
+        return example
+    parsed_dataset = raw_dataset.map(lambda x : parse_tfrecord_fn(x, tfrec_format))
+    
+    return parsed_dataset
+    
+    
+    
     
 
 

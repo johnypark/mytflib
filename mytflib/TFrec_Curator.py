@@ -75,7 +75,6 @@ def _int64_feature(value):
   """Returns an int64_list from a bool / enum / int / uint."""
   return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
-
 class tfrec_feature(object):
     """ creates an tfrec feature object. initiate with object name. add features with add_feature function.
     based on the type of the data, it choses feature functinos from above. 
@@ -99,8 +98,6 @@ class tfrec_feature(object):
     def serialize_example(self):
         example_proto = tf.train.Example(features=tf.train.Features(feature=self.feature))
         return example_proto.SerializeToString()
-
-
 
 
 def write_TFrec_from_df_jpeg(DataFrame, iPATH_col, TFREC_structure, dict_hchy, num_dp_per_record, resize_resol,
@@ -179,3 +176,17 @@ def display_sample_from_TFrec(tfrec_PATH, TFREC_FORMAT, display_size, N_suffle =
     plt.imshow(features["image"].numpy())
     plt.show()
 
+
+def inspect_tfrec(tfrecPATH):
+    ds_raw = tf.data.TFRecordDataset(tfrecPATH)
+    for raw_record in ds_raw.take(1):
+      example = tf.train.Example()
+      example.ParseFromString(raw_record.numpy())
+
+    tfrec_dtype = {}
+
+    for key, feature in example.features.feature.items():
+      kind = feature.WhichOneof('kind')
+      tfrec_dtype[key] = kind
+    
+    return tfrec_dtype
