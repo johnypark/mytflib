@@ -47,6 +47,14 @@ def load_image_and_resize(full_path, RESIZE, central_crop_frac = 0.9):
     return(img)
 
 
+def crop_and_resize(img, RESIZE, central_crop_frac = 0.9):
+    
+    img = tf.image.central_crop(img, central_fraction = central_crop_frac)
+    img = tf.image.resize(img, size = RESIZE)
+    return(img)
+
+
+
 def tfrec_format_generator(dictionary_obj):
 
     tfrec_format= dict()
@@ -185,9 +193,9 @@ def get_train_ds_tfrec_from_dict(config_dict,
                                  image_key = image_key)
     
     dataset = dataset.map(lambda image, label: onehot(image, label, n_cls = NUM_CLASSES), num_parallel_calls=AUTO)
-    dataset = dataset.map(lambda image, label: augment_images(image, label, resize_factor = RESIZE_FACTOR), num_parallel_calls=AUTO)
     if AugmentLayer:
         dataset = dataset.map(lambda image, label: (AugmentLayer(image), label), num_parallel_calls=AUTO).prefetch(AUTO)
+    dataset = dataset.map(lambda image, label: augment_images(image, label, resize_factor = RESIZE_FACTOR), num_parallel_calls=AUTO).prefetch(AUTO)
     if imagenet_normalize:
         dataset = dataset.map(normalize_RGB, num_parallel_calls=AUTO).prefetch(AUTO)
     if DataRepeat == True:
