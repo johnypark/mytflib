@@ -100,8 +100,8 @@ class tfrec_feature(object):
         return example_proto.SerializeToString()
 
 ## function to use for tfrec writing
-def clip2long_and_resize(im, 
-                                 se_size =None,
+def clip2long_and_resize2short(im, 
+                                 resize_short_edge =None,
                                  crop_ratio_short_edge = 1,
                                  clip_ratio_long_edge = 2
                                  ):
@@ -109,7 +109,7 @@ def clip2long_and_resize(im,
         """ image dimension: [long_edge, short_edge, channels] 
         crop_ratio_short_edge: crop ratio of the short_edge
         clip_ratio_long_edge: long_edge/short_edge
-        se_size: short_edge_image_target_resolution
+        resize_short_edge: short edge target resolution
         
         """
         im_long = max(im.shape)
@@ -118,8 +118,8 @@ def clip2long_and_resize(im,
         if crop_ratio_short_edge >1:
                 crop_ratio_short_edge = 1
                 
-        if se_size ==None:
-                se_size = im_short
+        if resize_short_edge ==None:
+                resize_short_edge = im_short
                 
         if clip_ratio_long_edge > (im_long /im_short):
                 clip_ratio_long_edge = im_long/im_short
@@ -137,7 +137,7 @@ def clip2long_and_resize(im,
         im = im[discard_len['long']: (crop_range['long']+discard_len['long']),
                 discard_len['short']: (crop_range['short']+discard_len['short']),
                 :]
-        im = tf.image.resize(im, size = (int(se_size*clip_ratio_long_edge), se_size))
+        im = tf.image.resize(im, size = (int(resize_short_edge*clip_ratio_long_edge), resize_short_edge))
         return im
 
 
