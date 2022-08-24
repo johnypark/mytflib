@@ -99,6 +99,48 @@ class tfrec_feature(object):
         example_proto = tf.train.Example(features=tf.train.Features(feature=self.feature))
         return example_proto.SerializeToString()
 
+## function to use for tfrec writing
+def clip2long_and_resize(im, 
+                                 se_size =None,
+                                 crop_ratio_short_edge = 1,
+                                 clip_ratio_long_edge = 2
+                                 ):
+        from statistics import median
+        """ image dimension: [long_edge, short_edge, channels] 
+        crop_ratio_short_edge: crop ratio of the short_edge
+        clip_ratio_long_edge: long_edge/short_edge
+        se_size: short_edge_image_target_resolution
+        
+        """
+        im_long = max(im.shape)
+        im_short = median(im.shape)
+        
+        if crop_ratio_short_edge >1:
+                crop_ratio_short_edge = 1
+                
+        if se_size ==None:
+                se_size = im_short
+                
+        if clip_ratio_long_edge > (im_long /im_short):
+                clip_ratio_long_edge = im_long/im_short
+
+        print(im_long, im_short)
+        print(im_long*crop_ratio_short_edge, im_short*crop_ratio_short_edge)
+        
+        crop_range = {'long':int(im_short*crop_ratio_short_edge*clip_ratio_long_edge),
+                'short':int(im_short*crop_ratio_short_edge)}
+        if crop_range['long'] > im_long:
+                crop_range['long'] = im_long
+
+        discard_len = {'long':(im_long - crop_range['long'])//2,
+                'short':(im_short - crop_range['short'])//2}
+        im = im[discard_len['long']: (crop_range['long']+discard_len['long']),
+                discard_len['short']: (crop_range['short']+discard_len['short']),
+                :]
+        im = tf.image.resize(im, size = (int(se_size*clip_ratio_long_edge), se_size))
+        return im
+
+
 def write_TFrec_from_df_jpeg(DataFrame, 
                               iPATH_col, 
                               TFREC_structure, 
