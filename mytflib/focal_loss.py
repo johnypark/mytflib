@@ -89,7 +89,7 @@ def sigmoid_focal_crossentropy2(
     alpha: FloatTensorLike = 0.25,
     gamma: FloatTensorLike = 2.0,
     from_logits: bool = False,
-    label_smoothing: FloatTensorLike = 0
+    label_smoothing: FloatTensorLike = 0.0
 ) -> tf.Tensor:
     """Implements the focal loss function.
 
@@ -116,13 +116,21 @@ def sigmoid_focal_crossentropy2(
         raise ValueError("Value of gamma should be greater than or equal to zero.")
 
     y_pred = tf.convert_to_tensor(y_pred)
-    y_true = tf.cast(y_true, dtype=y_pred.dtype)
-    
-    if label_smoothing:
-        y_true = y_true * (1.0 - label_smoothing) + 0.5 * label_smoothing
+    y_true = tf.cast(y_true, dtype=y_pred.dtype)        
+    label_smoothing = tf.convert_to_tensor(label_smoothing, dtype=y_pred.dtype)
 
+    def _smooth_labels_(y_true, label_smoothing):
+        y_true = y_true*(1 - label_smoothing) + label_smoothing/(num_classes) + \
+        (1 - y_true)*(label_smoothing/(num_classes))
+        return y_true
+    
+    y_true = _smooth_labels_(y_true, label_smoothing = label_smoothing)
+    
+    #tf.__internal__.smart_cond.smart_cond(label_smoothing,
+             #                                       _smooth_labels, lambda: y_true)
+    
     # Get the cross_entropy for each entry
-    ce = K.binary_crossentropy(y_true, y_pred, from_logits=from_logits)
+    ce = K.binary_crossentropy(y_true, y_pred, from_logits = from_logits)
 
     # If logits are provided then convert the predictions into probabilities
     if from_logits:
