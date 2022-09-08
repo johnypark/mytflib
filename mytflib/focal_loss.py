@@ -208,10 +208,8 @@ class FC_loss3(tf.keras.losses.Loss): # rewrote keras_cv focal loss, since it is
         self.from_logits = from_logits
         self.label_smoothing = label_smoothing
 
-    num_classes = tf.cast(tf.shape(y_true)[-1], y_pred.dtype)
-    label_smoothing = tf.convert_to_tensor(self.label_smoothing, dtype=y_pred.dtype)
-
-    def _smooth_labels(self, y_true, label_smoothing):
+    
+    def _smooth_labels(self, y_true, label_smoothing, num_classes):
         
         y_true = y_true*(1 - label_smoothing) + label_smoothing/(num_classes) + \
         (1 - y_true)*(label_smoothing/(num_classes))
@@ -220,10 +218,12 @@ class FC_loss3(tf.keras.losses.Loss): # rewrote keras_cv focal loss, since it is
     def call(self, y_true, y_pred):
         y_pred = tf.convert_to_tensor(y_pred)
         y_true = tf.cast(y_true, y_pred.dtype)
-
+        num_classes = tf.cast(tf.shape(y_true)[-1], y_pred.dtype)
+    
         if self.label_smoothing:
             y_true = self._smooth_labels(y_true, 
-                                         label_smoothing =  tf.convert_to_tensor(self.label_smoothing, dtype=y_pred.dtype))
+                                         label_smoothing =  tf.convert_to_tensor(self.label_smoothing, dtype=y_pred.dtype),
+                                         num_classes = num_classes)
 
         if self.from_logits:
             y_pred = tf.nn.sigmoid(y_pred)
