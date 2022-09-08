@@ -149,7 +149,8 @@ def sigmoid_focal_crossentropy2(
     
     if alpha:
         alpha = tf.cast(alpha, dtype=y_true.dtype)
-        alpha_factor = y_true * alpha + (1 - y_true) * (1 - alpha)
+        alpha_factor = y_true * alpha + (1 - y_true) * (1 - alpha)/(num_classes-1) # if not binary, need to change to alpha factor to account for num of classes
+        # essentially, negative samples weight gets down with the magnitude of the classes
 
     if gamma:
         gamma = tf.cast(gamma, dtype=y_true.dtype)
