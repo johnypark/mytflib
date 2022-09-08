@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Implements Focal loss. Adapted from tensorflow-addons, fixed several things. """
+"""Implements Focal loss. Adapted from tensorflow-addons, fixed several things. 
+    9/7/2022 Added label smoothing term
+    To do list: get_config method for SigmoidFocalCrossEntropy2
+    Test FC_loss3
+"""
 
 import tensorflow as tf
 import tensorflow.keras.backend as K
@@ -116,7 +120,8 @@ def sigmoid_focal_crossentropy2(
         raise ValueError("Value of gamma should be greater than or equal to zero.")
 
     y_pred = tf.convert_to_tensor(y_pred)
-    y_true = tf.cast(y_true, dtype=y_pred.dtype)        
+    y_true = tf.cast(y_true, dtype=y_pred.dtype)  
+    num_classes = tf.cast(tf.shape(y_true)[-1], y_pred.dtype)
     label_smoothing = tf.convert_to_tensor(label_smoothing, dtype=y_pred.dtype)
 
     def _smooth_labels_(y_true, label_smoothing):
@@ -153,3 +158,100 @@ def sigmoid_focal_crossentropy2(
         
     # compute the final loss and return
     return tf.reduce_sum(alpha_factor * modulating_factor * ce, axis=-1)
+
+#https://github.com/keras-team/keras-cv/blob/master/keras_cv/losses/focal.py
+class FC_loss3(tf.keras.losses.Loss): # rewrote keras_cv focal loss, since it is not correctly written for label smoothing,
+    # and it generates NaN when gamma = 0.5.
+    """Implements Focal loss
+    Focal loss is a modified cross-entropy designed to perform better with
+    class imbalance. For this reason, it's commonly used with object detectors.
+    Args:
+        alpha: a float value between 0 and 1 representing a weighting factor
+            used to deal with class imbalance. Positive classes and negative
+            classes have alpha and (1 - alpha) as their weighting factors
+            respectively. Defaults to 0.25.
+        gamma: a positive float value representing the tunable focusing
+            parameter. Defaults to 2.
+        from_logits: Whether `y_pred` is expected to be a logits tensor. By
+            default, `y_pred` is assumed to encode a probability distribution.
+            Default to `False`.
+        label_smoothing: Float in `[0, 1]`. If higher than 0 then smooth the
+            labels by squeezing them towards `0.5`, i.e., using `1. - 0.5 * label_smoothing`
+            for the target class and `0.5 * label_smoothing` for the non-target
+            class. THIS PART NEEDS REWRITING 
+    References:
+        - [Focal Loss paper](https://arxiv.org/abs/1708.02002)
+    Standalone usage:
+    ```python
+    y_true = tf.random.uniform([10], 0, maxval=4)
+    y_pred = tf.random.uniform([10], 0, maxval=4)
+    loss = FocalLoss()
+    loss(y_true, y_pred).numpy()
+    ```
+    Usage with the `compile()` API:
+    ```python
+    model.compile(optimizer='adam', loss=keras_cv.losses.FocalLoss())
+    ```
+    """
+
+    def __init__(
+        self,
+        alpha=0.25,
+        gamma=2,
+        from_logits=False,
+        label_smoothing=0,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self._alpha = float(alpha)
+        self._gamma = float(gamma)
+        self.from_logits = from_logits
+        self.label_smoothing = label_smoothing
+
+    num_classes = tf.cast(tf.shape(y_true)[-1], y_pred.dtype)
+    label_smoothing = tf.convert_to_tensor(self.label_smoothing, dtype=y_pred.dtype)
+
+    def _smooth_labels(self, y_true, label_smoothing):
+        
+        y_true = y_true*(1 - label_smoothing) + label_smoothing/(num_classes) + \
+        (1 - y_true)*(label_smoothing/(num_classes))
+        return y_true
+
+    def call(self, y_true, y_pred):
+        y_pred = tf.convert_to_tensor(y_pred)
+        y_true = tf.cast(y_true, y_pred.dtype)
+
+        if self.label_smoothing:
+            y_true = self._smooth_labels(y_true, 
+                                         label_smoothing =  tf.convert_to_tensor(self.label_smoothing, dtype=y_pred.dtype))
+
+        if self.from_logits:
+            y_pred = tf.nn.sigmoid(y_pred)
+
+        cross_entropy = K.binary_crossentropy(y_true, y_pred)
+
+        alpha = y_true * self._alpha + (1 - y_true) * (1 - self._alpha)
+        p_t = y_true * y_pred + (1.0 - y_true) * (1.0 - y_pred)
+        focal_weight = K.clip((1.0 - p_t), K.epsilon(), 1.0) 
+        loss = alpha * tf.pow(focal_weight, self._gamma) * cross_entropy
+        # In most losses you mean over the final axis to achieve a scalar
+        # Focal loss however is a special case in that it is meant to focus on
+        # a small number of hard examples in a batch.  Most of the time this
+        # comes in the form of thousands of background class boxes and a few
+        # positive boxes.
+        # If you mean over the final axis you will get a number close to 0,
+        # which will encourage your model to exclusively predict background
+        # class boxes.
+        return K.sum(loss, axis=-1)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "alpha": self.alpha,
+                "gamma": self.gamma,
+                "from_logits": self.from_logits,
+                "label_smoothing": self.label_smoothing,
+            }
+        )
+        return config
