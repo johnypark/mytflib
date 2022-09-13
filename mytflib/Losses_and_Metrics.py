@@ -256,3 +256,24 @@ class FC_loss3(tf.keras.losses.Loss): # rewrote keras_cv focal loss, since it is
             }
         )
         return config
+    
+# calculation of F1 metric # 9/13/22
+    
+def calc_F1(ls_true, ls_pred, cls_int):
+    import numpy as np
+    t_t = ls_true
+    t_p = ls_pred
+    Ncls = cls_int
+    index_true = np.where(np.array(t_t)==Ncls)[0]  # Make this a matrix
+    index_pred = np.where(np.array(t_p)==Ncls)[0]  # Make this a matrix
+    
+    if len(index_true):
+        S_t = set(index_true)
+        S_p = set(index_pred)
+        TP = len(S_t.intersection(S_p))
+        FN = len(S_t.difference(S_p))
+        FP = len(S_p.difference(S_t))
+        F1 = (2*TP/(2*TP+FN+FP))
+    else:
+        F1 = np.nan
+    return F1
