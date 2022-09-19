@@ -99,6 +99,78 @@ class tfrec_feature(object):
         example_proto = tf.train.Example(features=tf.train.Features(feature=self.feature))
         return example_proto.SerializeToString()
 
+def write_one_tfrec(DataFrameObj, index, config_dict, labels_lookup, split_folder):
+  import cv2
+  iPATH_col = config_dict['iPATH_col']
+  SIZE = config_dict['SIZE']
+  config_resize = config_dict['resize'] 
+  if labels_lookup:
+    table_hchy = config_dict['table_hchy'] 
+  TAR_QUALITY = config_dict['TAR_QUALITY'] 
+  TFREC_name = config_dict['TFREC_prefix'] 
+  format = config_dict['format']
+  usage = config_dict['usage']
+  df = DataFrameObj
+  j = index
+  CT2 = min(SIZE,len(df)-j*SIZE)
+        #CT2 = 1000
+  
+  full_name = TFREC_name+'_res%iby%i_%s%.2i_%i.tfrec'%(
+                    config_resize[0],
+                    config_resize[1],
+                    usage,
+                    j,
+                    CT2)
+  
+  with tf.io.TFRecordWriter(full_name) as writer:
+    for k in range(CT2):
+      cidx = SIZE*j+k
+      row = df.iloc[cidx]
+      img = cv2.imread(row[iPATH_col])
+      img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR) # Fix incorrect colors
+      img = cv2.resize(img, config_resize)
+      img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+      img_bytes = cv2.imencode(
+      '.jpg', img, (cv2.IMWRITE_JPEG_QUALITY, TAR_QUALITY))[1].tobytes() #tostring written by chris output [true, values], so take 1.
+      _feature_ = tfrec_feature() #tfl.tfrec_feature()
+      for key, value in format.items():
+        if value =="image":
+          _feature_.add_feature(key, img_bytes, _bytes_feature)
+                      
+        elif value =="int":
+          if labels_lookup is True:
+            _feature_.add_feature(key, table_hchy[key][row[key]], _int64_feature)  
+          else:
+            _feature_.add_feature(key, row[key], _int64_feature)
+                      
+        elif value == "str":
+          if split_folder:
+            _feature_.add_feature(key, bytes(row[key].split("\\")[-1], 'utf-8'), _bytes_feature)
+          else:
+            _feature_.add_feature(key, bytes(row[key], 'utf-8'), _bytes_feature)
+      
+      example =_feature_.serialize_example()
+      writer.write(example)
+      if k%500==0: print(k,', ',end='')
+
+
+
+class multi_process_tfrec(object):
+    def __init__(self, DataFrameObj, config_dict, CT, labels_lookup, split_folder):
+        self.df = DataFrameObj
+        self.config_dict = config_dict
+        self.labels_lookup = labels_lookup 
+        self.split_folder = split_folder
+        self.Count = CT
+    def __call__(self, index):
+        print(); print('Writing TFRecord %i of %i...'%(index, self.Count))
+        write_one_tfrec(DataFrameObj = self.df,
+                        index = index, 
+                        config_dict = self.config_dict, 
+                        labels_lookup = self.labels_lookup, 
+                        split_folder = self.split_folder)    
+
+
 def write_TFrec_from_df_jpeg(DataFrame, 
                               iPATH_col, 
                               TFREC_structure, 
@@ -106,67 +178,41 @@ def write_TFrec_from_df_jpeg(DataFrame,
                               resize_resol,
                               dict_hchy, 
                               usage,
+                              num_workers = 2, 
                               split_folder = False,
                               labels_lookup = True, TFREC_name ="TFrec", jpeg_quality = 95):  
 
     """ resize_resol : list or tuple of (,)"""
     import cv2
     df = DataFrame.sample(frac=1)
-    SIZE = num_dp_per_record
-    config_resize = resize_resol
-    table_hchy = dict_hchy
-    TAR_QUALITY = jpeg_quality
-    TFREC_name = TFREC_name
-    format = TFREC_structure
+    config = dict()
+    config['iPATH_col'] = iPATH_col
+    config['SIZE'] = num_dp_per_record
+    config['resize'] = resize_resol
+    if labels_lookup:
+      config['table_hchy'] = dict_hchy
+    config['TAR_QUALITY'] = jpeg_quality
+    config['TFREC_prefix'] = TFREC_name
+    config['format'] = TFREC_structure
+    config['usage'] = usage
+    print(config)
     """ example of TFREC_strucure is as follows:
     {"image":"image", "image_id":"str", "scientificName":"int", "genus":"int", "family":"int"}
     """
+    SIZE= config['SIZE']
     CT = len(df)//SIZE + int(len(df)%SIZE!=0)
     print(CT)
-    #CT = 1
-    for j in range(CT):
-        print(); print('Writing TFRecord %i of %i...'%(j,CT))
-        CT2 = min(SIZE,len(df)-j*SIZE)
-        #CT2 = 1000
-        full_name = TFREC_name+'_res%iby%i_%s%.2i_%i.tfrec'%(
-                    config_resize[0],
-                    config_resize[1],
-                    usage,
-                    j,
-                    CT2)
-        print(full_name)
-        with tf.io.TFRecordWriter(full_name) as writer:
-            for k in range(CT2):
-                cidx = SIZE*j+k
-                row = df.iloc[cidx]
-                img = cv2.imread(row[iPATH_col])
-                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR) # Fix incorrect colors
-                img = cv2.resize(img, config_resize)
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                img_bytes = cv2.imencode(
-                  '.jpg', img, (cv2.IMWRITE_JPEG_QUALITY, TAR_QUALITY))[1].tobytes() #tostring written by chris output [true, values], so take 1.
-                _feature_ = tfrec_feature()
-                for key, value in format.items():
-                  if value =="image":
-                    _feature_.add_feature(key, img_bytes, _bytes_feature)
-                  
-                  elif value =="int":
-                    if labels_lookup is True:
-                      _feature_.add_feature(key, table_hchy[key][row[key]], _int64_feature)  
-                    else:
-                      _feature_.add_feature(key, row[key], _int64_feature)
-                  
-                  elif value == "str":
-                    if split_folder:
-                      _feature_.add_feature(key, bytes(row[key].split("\\")[-1], 'utf-8'), _bytes_feature)
-                    else:
-                      _feature_.add_feature(key, bytes(row[key], 'utf-8'), _bytes_feature)
-                    
+    
+    from multiprocessing import Pool
+    pool = Pool(num_workers)
+    mult = multi_process_tfrec(df, config_dict = config, CT = CT, 
+    labels_lookup = labels_lookup, split_folder = split_folder)
+    write = pool.map(mult, range(CT))
 
-                example =_feature_.serialize_example()
-                
-                writer.write(example)
-                if k%500==0: print(k,', ',end='')
+    #CT = 1
+    #for j in range(CT):
+    #    print(); print('Writing TFRecord %i of %i...'%(j,CT))
+    
 ### Confirm the tfrecord is correctly created ####
 ### tfrec_format is the same as in DataLoader ####
 ### tfrec_format is not the same as tfrec_structure ####
