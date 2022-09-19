@@ -99,6 +99,7 @@ class tfrec_feature(object):
         example_proto = tf.train.Example(features=tf.train.Features(feature=self.feature))
         return example_proto.SerializeToString()
 
+<<<<<<< HEAD
 def write_one_tfrec(DataFrameObj, index, config_dict, labels_lookup, split_folder):
   import cv2
   iPATH_col = config_dict['iPATH_col']
@@ -169,6 +170,48 @@ class multi_process_tfrec(object):
                         config_dict = self.config_dict, 
                         labels_lookup = self.labels_lookup, 
                         split_folder = self.split_folder)    
+=======
+## function to use for tfrec writing
+def clip2long_and_resize2short(im, 
+                                 resize_short_edge =None,
+                                 crop_ratio_short_edge = 1,
+                                 clip_ratio_long_edge = 2
+                                 ):
+        from statistics import median
+        """ image dimension: [long_edge, short_edge, channels] 
+        crop_ratio_short_edge: crop ratio of the short_edge
+        clip_ratio_long_edge: long_edge/short_edge
+        resize_short_edge: short edge target resolution
+        
+        """
+        im_long = max(im.shape)
+        im_short = median(im.shape)
+        
+        if crop_ratio_short_edge >1:
+                crop_ratio_short_edge = 1
+                
+        if resize_short_edge ==None:
+                resize_short_edge = im_short
+                
+        if clip_ratio_long_edge > (im_long /im_short):
+                clip_ratio_long_edge = im_long/im_short
+
+        print(im_long, im_short)
+        print(im_long*crop_ratio_short_edge, im_short*crop_ratio_short_edge)
+        
+        crop_range = {'long':int(im_short*crop_ratio_short_edge*clip_ratio_long_edge),
+                'short':int(im_short*crop_ratio_short_edge)}
+        if crop_range['long'] > im_long:
+                crop_range['long'] = im_long
+
+        discard_len = {'long':(im_long - crop_range['long'])//2,
+                'short':(im_short - crop_range['short'])//2}
+        im = im[discard_len['long']: (crop_range['long']+discard_len['long']),
+                discard_len['short']: (crop_range['short']+discard_len['short']),
+                :]
+        im = tf.image.resize(im, size = (int(resize_short_edge*clip_ratio_long_edge), resize_short_edge))
+        return im
+>>>>>>> bb0f993fcc1bff1a7ee90519c1e419368f2ca2f1
 
 
 def write_TFrec_from_df_jpeg(DataFrame, 

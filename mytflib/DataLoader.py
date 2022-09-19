@@ -138,8 +138,9 @@ def normalize_RGB(image, label):
 def augment_images(image, label, resize_factor, crop_ratio = 0.9):
     
     #max_angle=tf.constant(np.pi/6)
-    #img = tf.image.random_flip_left_right(image)
+    img = tf.image.random_flip_left_right(image)
     #img = tfa.image.rotate(img, angles=max_angle*tf.random.uniform([1], minval=-1, maxval=1, dtype=tf.dtypes.float32)) # added random rotation, 30 degrees each side
+    img = tf.image.random_flip_up_down(image)
     img = tf.image.central_crop(image, central_fraction = crop_ratio)
     img = tf.image.resize( img, size = resize_factor)
     return img, label
