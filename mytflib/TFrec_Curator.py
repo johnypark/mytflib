@@ -99,7 +99,7 @@ class tfrec_feature(object):
         example_proto = tf.train.Example(features=tf.train.Features(feature=self.feature))
         return example_proto.SerializeToString()
 
-<<<<<<< HEAD
+
 def write_one_tfrec(DataFrameObj, index, config_dict, labels_lookup, split_folder):
   import cv2
   iPATH_col = config_dict['iPATH_col']
@@ -170,7 +170,7 @@ class multi_process_tfrec(object):
                         config_dict = self.config_dict, 
                         labels_lookup = self.labels_lookup, 
                         split_folder = self.split_folder)    
-=======
+
 ## function to use for tfrec writing
 def clip2long_and_resize2short(im, 
                                  resize_short_edge =None,
@@ -211,8 +211,6 @@ def clip2long_and_resize2short(im,
                 :]
         im = tf.image.resize(im, size = (int(resize_short_edge*clip_ratio_long_edge), resize_short_edge))
         return im
->>>>>>> bb0f993fcc1bff1a7ee90519c1e419368f2ca2f1
-
 
 def write_TFrec_from_df_jpeg(DataFrame, 
                               iPATH_col, 
