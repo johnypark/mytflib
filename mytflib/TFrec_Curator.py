@@ -43,6 +43,11 @@ def inspect_tfrecord(list_or_single_file):
         kind = feature.WhichOneof('kind')
         tfrec_dtype[key] = kind
     print("Done.")
+    import json
+    N_features = len(tfrec_dtype)
+    indented = json.dumps(tfrec_dtype, sort_keys=True, indent=4)
+    print("Number of features in the TFRecord: {}\n{}".format(N_features,
+                                                              indented)) 
     return (tfrec_dtype)
 
 def get_tfrec_format(dictionary_obj):
@@ -59,6 +64,7 @@ def get_tfrec_format(dictionary_obj):
             tfrec_format[key] = tf.io.FixedLenSequenceFeature([], tf_dtype, 
                                           allow_missing = True,
                                           default_value=0.0)
+                                        
     return tfrec_format
 
 def map_decode_jpeg(parsed_dict, list_vars):
@@ -66,17 +72,10 @@ def map_decode_jpeg(parsed_dict, list_vars):
         parsed_dict[ele] = tf.io.decode_jpeg(parsed_dict[ele])
     return parsed_dict
 
-def get_TFRecordDataset(ls_tfrecs):
+def get_TFRecordDataset(ls_tfrecs, tfrec_feature_map):
     
-    tfrec_dtype = inspect_tfrecord(ls_tfrecs)
-    tfrec_feature_mapping = get_tfrec_format(tfrec_dtype)
-    import json
-    N_features = len(tfrec_dtype)
-    indented = json.dumps(tfrec_dtype, sort_keys=True, indent=4)
-    print("Number of features in the TFRecord: {}\n{}".format(N_features,
-                                                              indented))
     ds_raw = tf.data.TFRecordDataset(ls_tfrecs)
-    ds_parsed = ds_raw.map(lambda raw: tf.io.parse_single_example(raw, tfrec_feature_mapping))
+    ds_parsed = ds_raw.map(lambda raw: tf.io.parse_single_example(raw, tfrec_feature_map))
     print("TFRecord Dataset successfully parsed.")
     return ds_parsed
 
@@ -125,9 +124,9 @@ def preprocessing(ds_dict, image_var, crop_ratio, resize_target):
     
     return ds_dict
 
-def TFRecord_DataLoader(ls_tfrecs, list_var_to_decode, preprocess_func):
+def TFRecord_DataLoader(ls_tfrecs, tfrec_feature_map, list_var_to_decode, preprocess_func):
     
-    ds_parsed = get_TFRecordDataset(ls_tfrecs)
+    ds_parsed = get_TFRecordDataset(ls_tfrecs, tfrec_feature_map)
     ds_decoded = ds_decode_jpeg(ds_parsed, list_var_to_decode)
     ds_ready = ds_decoded.map(preprocess_func)
     
