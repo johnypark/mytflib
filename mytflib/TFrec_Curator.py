@@ -28,8 +28,60 @@ from mytflib.DataLoader import (
     parse_tfrecord_fn
 )
 
-# this file is for TFREC writer function.
+def inspect_tfrecord(list_or_single_file):
+    ls_ = list_or_single_file
+    print("Loading tfrecord as raw data...")
+    ds_raw = tf.data.TFRecordDataset(ls_)
+    print("Done. Parsing a single raw data example... ")
+    for raw_record in ds_raw.take(1):
+        example = tf.train.Example()
+        example.ParseFromString(raw_record.numpy())
+    #print(example)
 
+    tfrec_dtype = {}
+    print("Done. Adding features of the example...")
+    for key, feature in example.features.feature.items():
+        kind = feature.WhichOneof('kind')
+        tfrec_dtype[key] = kind
+    print("Done.")
+    return (tfrec_dtype)
+
+def get_tfrec_format(dictionary_obj):
+    tfrec_format= dict()
+    for key, value in dictionary_obj.items():
+        if value == "bytes_list":
+            tf_dtype =  tf.string
+            tfrec_format[key] = tf.io.FixedLenFeature([], tf_dtype)   
+        elif value == "int64_list":
+            tf_dtype = tf.int64
+            tfrec_format[key] = tf.io.FixedLenFeature([], tf_dtype)   
+        elif value == "float_list":
+            tf_dtype = tf.float32
+            tfrec_format[key] = tf.io.FixedLenSequenceFeature([], tf_dtype, 
+                                          allow_missing = True,
+                                          default_value=0.0)
+    return tfrec_format
+
+def map_decode_jpeg(parsed_dict, list_vars):
+    for ele in list_vars:
+        parsed_dict[ele] = tf.io.decode_jpeg(parsed_dict[ele])
+    return parsed_dict
+
+def get_TFRecordDataset(ls_gsbucket):
+    
+    tfrec_dtype = inspect_tfrecord(ls_gsbucket)
+    tfrec_feature_mapping = get_tfrec_format(tfrec_dtype)
+    import json
+    N_features = len(tfrec_dtype)
+    indented = json.dumps(tfrec_dtype, sort_keys=True, indent=4)
+    print("Number of features in the TFRecord: {}\n{}".format(N_features,
+                                                              indented))
+    ds_raw = tf.data.TFRecordDataset(ls_gsbucket)
+    ds_parsed = ds_raw.map(lambda raw: tf.io.parse_single_example(raw, tfrec_feature_mapping))
+    print("TFRecord Dataset successfully parsed.")
+    return ds_parsed
+
+# this file is for TFREC writer function.
 
 def get_hchy_table(df, list_target_names):
 
