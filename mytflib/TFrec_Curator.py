@@ -67,19 +67,47 @@ def map_decode_jpeg(parsed_dict, list_vars):
         parsed_dict[ele] = tf.io.decode_jpeg(parsed_dict[ele])
     return parsed_dict
 
-def get_TFRecordDataset(ls_gsbucket):
+def get_TFRecordDataset(ls_):
     
-    tfrec_dtype = inspect_tfrecord(ls_gsbucket)
+    tfrec_dtype = inspect_tfrecord(ls_)
     tfrec_feature_mapping = get_tfrec_format(tfrec_dtype)
     import json
     N_features = len(tfrec_dtype)
     indented = json.dumps(tfrec_dtype, sort_keys=True, indent=4)
     print("Number of features in the TFRecord: {}\n{}".format(N_features,
                                                               indented))
-    ds_raw = tf.data.TFRecordDataset(ls_gsbucket)
+    ds_raw = tf.data.TFRecordDataset(ls_train)
     ds_parsed = ds_raw.map(lambda raw: tf.io.parse_single_example(raw, tfrec_feature_mapping))
     print("TFRecord Dataset successfully parsed.")
     return ds_parsed
+
+def map_decode_jpeg(parsed_dict, list_vars):
+    for ele in list_vars:
+        parsed_dict[ele] = tf.io.decode_jpeg(parsed_dict[ele])
+    return parsed_dict
+
+def display_batch_from_ds(ds_parsed, imshow_var, label_vars, 
+                          batch_size = 64, 
+                          col_row = (8,8), 
+                          FIGSIZE = (25,25)):
+    import matplotlib.pyplot as plt
+    from tqdm import tqdm
+    
+    n_col, n_row = col_row
+    FIGSIZE = FIGSIZE
+    iter_ds = iter(ds_parsed)
+    figs, axs = plt.subplots(n_row, n_col, figsize= FIGSIZE)
+    for row in tqdm(range(n_row)):
+        for col in range(n_col):
+            next_item = next(iter_ds)
+            axs[row,col].set_xticks([])
+            axs[row,col].set_yticks([])
+            axs[row,col].imshow(next_item[imshow_var])
+            label_text = "{}".format(next_item[label_vars[0]])
+            if len(label_vars)>1:
+                for ele in label_vars[1:]:
+                    label_text = label_text +", {}".format(next_item[ele])        
+            axs[row,col].title.set_text(label_text)
 
 # this file is for TFREC writer function.
 
