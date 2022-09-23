@@ -77,7 +77,10 @@ def map_decode_jpeg(parsed_dict, list_vars):
 
 def get_TFRecordDataset(ls_tfrecs, tfrec_feature_map):
     
+    ignore_order = tf.data.Options()
+    ignore_order.experimental_deterministic = False
     ds_raw = tf.data.TFRecordDataset(ls_tfrecs)
+    ds_raw = ds_raw.with_options(ignore_order)
     ds_parsed = ds_raw.map(
                 lambda raw: tf.io.parse_single_example(raw, tfrec_feature_map), 
                 num_parallel_calls = AUTO
@@ -99,7 +102,10 @@ def get_image_and_label(ds_parsed_dict, img_var, label_vars):
 
 def get_TFRecordDataset2(ls_tfrecs, tfrec_feature_map, img_var, label_vars):
     
+    ignore_order = tf.data.Options()
+    ignore_order.experimental_deterministic = False
     ds_raw = tf.data.TFRecordDataset(ls_tfrecs)
+    ds_raw = ds_raw.with_options(ignore_order)
     ds_parsed = ds_raw.map(
                 lambda raw: tf.io.parse_single_example(raw, tfrec_feature_map), 
                 num_parallel_calls = AUTO
