@@ -75,7 +75,7 @@ def map_decode_jpeg(parsed_dict, list_vars):
         parsed_dict[ele] = tf.io.decode_jpeg(parsed_dict[ele])
     return parsed_dict
 
-def get_TFRecordDataset(ls_tfrecs, tfrec_feature_map, data_var, label_vars):
+def get_TFRecordDataset(ls_tfrecs, tfrec_feature_map):
     
     ds_raw = tf.data.TFRecordDataset(ls_tfrecs)
     ds_parsed = ds_raw.map(
@@ -88,7 +88,11 @@ def get_TFRecordDataset(ls_tfrecs, tfrec_feature_map, data_var, label_vars):
 def get_image_and_label(ds_parsed_dict, img_var, label_vars):
     
     image = tf.io.decode_jpeg(ds_parsed_dict[img_var], channels = 3)
-    label = list(map(ds_parsed_dict.get, label_vars))
+    if len(label_vars)>1:
+      label = list(map(ds_parsed_dict.get, label_vars))
+    else:
+      label_var = label_vars
+      label = ds_parsed_dict[label_var]
     return image, label
 
 def get_TFRecordDataset2(ls_tfrecs, tfrec_feature_map, img_var, label_vars):
