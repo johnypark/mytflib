@@ -79,7 +79,7 @@ def parse_tfrecord_fn(example, TFREC_FORMAT):
 def decode_image(image_data_bytes, TFREC_SIZES):
 
     img = tf.io.decode_jpeg(image_data_bytes, channels=3)  # image format uint8 [0,255]
-    img = tf.reshape(img, [*TFREC_SIZES, 3])
+    #img = tf.reshape(img, [*TFREC_SIZES, 3])
     img = tf.cast(img, dtype = tf.float32) / 255.0
     return img
 
