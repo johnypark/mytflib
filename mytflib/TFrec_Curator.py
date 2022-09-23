@@ -27,6 +27,9 @@ from mytflib.DataLoader import (
     tfrec_format_generator,
     parse_tfrecord_fn
 )
+
+AUTO = tf.data.experimental.AUTOTUNE
+
 def inspect_tfrecord(list_or_single_file):
     ls_ = list_or_single_file
     print("Loading tfrecord as raw data...")
@@ -75,7 +78,10 @@ def map_decode_jpeg(parsed_dict, list_vars):
 def get_TFRecordDataset(ls_tfrecs, tfrec_feature_map):
     
     ds_raw = tf.data.TFRecordDataset(ls_tfrecs)
-    ds_parsed = ds_raw.map(lambda raw: tf.io.parse_single_example(raw, tfrec_feature_map))
+    ds_parsed = ds_raw.map(
+                lambda raw: tf.io.parse_single_example(raw, tfrec_feature_map), 
+                num_parallel_calls = AUTO
+                ).prefetch(AUTO)
     print("TFRecord Dataset successfully parsed.")
     return ds_parsed
 
@@ -92,7 +98,9 @@ def ds_decode_jpeg(ds_parsed, list_vars_to_decode, list_channels):
         lambda parsed: map_decode_jpeg(
             parsed, 
             list_vars_to_decode,
-            list_channels))
+            list_channels), 
+            num_parallel_calls = AUTO
+            ).prefetch(AUTO)
     return ds_decoded
     
 def display_batch_from_ds(ds_decoded, imshow_var, label_vars, 
@@ -132,8 +140,9 @@ def TFRecord_DataLoader(ls_tfrecs, tfrec_feature_map, list_var_to_decode, list_c
     
     ds_parsed = get_TFRecordDataset(ls_tfrecs, tfrec_feature_map)
     ds_decoded = ds_decode_jpeg(ds_parsed, list_var_to_decode, list_channels)
-    ds_ready = ds_decoded.map(preprocess_func)
-    
+    ds_ready = ds_decoded.map(preprocess_func, 
+                              num_parallel_calls = AUTO
+                              ).prefetch(AUTO)
     return ds_ready
 
 
