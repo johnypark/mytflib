@@ -62,11 +62,11 @@ def get_tfrec_format(dictionary_obj):
         elif value == "int64_list":
             tf_dtype = tf.int64
             tfrec_format[key] = tf.io.FixedLenFeature([], tf_dtype)   
-        elif value == "float_list":
-            tf_dtype = tf.float32
-            tfrec_format[key] = tf.io.FixedLenSequenceFeature([], tf_dtype, 
-                                          allow_missing = True,
-                                          default_value=0.0)
+        #elif value == "float_list":
+        #    tf_dtype = tf.float32
+        #    tfrec_format[key] = tf.io.FixedLenSequenceFeature([], tf_dtype, 
+        #                                  allow_missing = True,
+        #                                  default_value=0.0)
                                         
     return tfrec_format
 
