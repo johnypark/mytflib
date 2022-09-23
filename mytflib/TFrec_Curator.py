@@ -90,9 +90,11 @@ def get_image_and_label(ds_parsed_dict, img_var, label_vars):
     image = tf.io.decode_jpeg(ds_parsed_dict[img_var], channels = 3)
     if len(label_vars) > 1:
       label = list(map(ds_parsed_dict.get, label_vars))
-    else:
+    elif type(label_vars) == type("str"):
       label_var = label_vars
       label = ds_parsed_dict[label_var]
+    else:
+      label = ds_parsed_dict[label_vars[0]]
     return image, label
 
 def get_TFRecordDataset2(ls_tfrecs, tfrec_feature_map, img_var, label_vars):
