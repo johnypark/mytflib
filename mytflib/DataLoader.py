@@ -227,7 +227,6 @@ def get_vali_ds_tfrec(LS_FILENAMES, TFREC_DICT, TFREC_SIZES, RESIZE_FACTOR, NUM_
     dataset = dataset.prefetch(AUTO) # prefetch next batch while training (autotune prefetch buffer size)
     return dataset
 
-
 def get_vali_ds_tfrec_from_dict(config_dict, label_name,  image_key = "image", AugmentLayer = False):
     
     LS_FILENAMES =  config_dict["ls_vali_files"]
