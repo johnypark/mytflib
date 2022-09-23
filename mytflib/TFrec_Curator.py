@@ -75,7 +75,7 @@ def map_decode_jpeg(parsed_dict, list_vars):
         parsed_dict[ele] = tf.io.decode_jpeg(parsed_dict[ele])
     return parsed_dict
 
-def get_TFRecordDataset(ls_tfrecs, tfrec_feature_map):
+def get_TFRecordDataset(ls_tfrecs, tfrec_feature_map, data_var, label_vars):
     
     ds_raw = tf.data.TFRecordDataset(ls_tfrecs)
     ds_parsed = ds_raw.map(
@@ -84,6 +84,23 @@ def get_TFRecordDataset(ls_tfrecs, tfrec_feature_map):
                 ).prefetch(AUTO)
     print("TFRecord Dataset successfully parsed.")
     return ds_parsed
+
+def get_image_and_label(ds_parsed_dict, img_var, label_vars):
+    
+    image = tf.io.decode_jpeg(ds_parsed_dict[img_var], channels = 3)
+    label = list(map(ds_parsed_dict.get, label_vars))
+    return image, label
+
+def get_TFRecordDataset2(ls_tfrecs, tfrec_feature_map, img_var, label_vars):
+    
+    ds_raw = tf.data.TFRecordDataset(ls_tfrecs)
+    ds_parsed = ds_raw.map(
+                lambda raw: tf.io.parse_single_example(raw, tfrec_feature_map), 
+                num_parallel_calls = AUTO
+                ).prefetch(AUTO)
+    print("TFRecord Dataset successfully parsed.")
+    ds_ready = ds_parsed.map(lambda x: get_image_and_label(x, img_var, label_vars))
+    return ds_ready
 
 def map_decode_jpeg(parsed_dict, list_vars, list_ch):
 
