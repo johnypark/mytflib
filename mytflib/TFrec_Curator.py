@@ -79,16 +79,20 @@ def get_TFRecordDataset(ls_tfrecs, tfrec_feature_map):
     print("TFRecord Dataset successfully parsed.")
     return ds_parsed
 
-def map_decode_jpeg(parsed_dict, list_vars):
-    for ele in list_vars:
-        parsed_dict[ele] = tf.io.decode_jpeg(parsed_dict[ele])
+def map_decode_jpeg(parsed_dict, list_vars, list_ch):
+
+    for idx in range(len(list_vars)):
+      parsed_dict[list_vars[idx]] = tf.io.decode_jpeg(
+                                    parsed_dict[list_vars[idx]], 
+                                    channels = list_ch[idx])
     return parsed_dict
 
-def ds_decode_jpeg(ds_parsed, list_vars_to_decode):
+def ds_decode_jpeg(ds_parsed, list_vars_to_decode, list_channels):
     ds_decoded = ds_parsed.map(
         lambda parsed: map_decode_jpeg(
             parsed, 
-            list_vars_to_decode))
+            list_vars_to_decode,
+            list_channels))
     return ds_decoded
     
 def display_batch_from_ds(ds_decoded, imshow_var, label_vars, 
@@ -124,10 +128,10 @@ def preprocessing(ds_dict, image_var, crop_ratio, resize_target):
     
     return ds_dict
 
-def TFRecord_DataLoader(ls_tfrecs, tfrec_feature_map, list_var_to_decode, preprocess_func):
+def TFRecord_DataLoader(ls_tfrecs, tfrec_feature_map, list_var_to_decode, list_channels, preprocess_func):
     
     ds_parsed = get_TFRecordDataset(ls_tfrecs, tfrec_feature_map)
-    ds_decoded = ds_decode_jpeg(ds_parsed, list_var_to_decode)
+    ds_decoded = ds_decode_jpeg(ds_parsed, list_var_to_decode, list_channels)
     ds_ready = ds_decoded.map(preprocess_func)
     
     return ds_ready
