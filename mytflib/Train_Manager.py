@@ -101,7 +101,7 @@ def model_config_save(model,
       try:
         model_info['loss'][i] = loss_i.get_config()
       except:
-        model_info['loss'][i] = model.loss[loss_i].get_config())
+        model_info['loss'][i] = model.loss[loss_i].get_config()
       i +=1
         
   model_info['optimizer'] = change_np_float_to_float(model_info['optimizer'])
