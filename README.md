@@ -1,6 +1,6 @@
 [![PyPI version](https://badge.fury.io/py/mytflib.svg)](https://badge.fury.io/py/mytflib)   [![Downloads](https://pepy.tech/badge/mytflib)](https://pepy.tech/project/mytflib)
 
-[![Open In Colab](https://colab.research.google.com/drive/1PxGOLO0qmxWdQzZ1REkZBv4ZaJ3Vnpba?usp=sharing)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1PxGOLO0qmxWdQzZ1REkZBv4ZaJ3Vnpba?usp=sharing)
 
 
 
