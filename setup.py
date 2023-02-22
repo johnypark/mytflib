@@ -7,7 +7,7 @@ setuptools.setup(
     name="mytflib", # Replace with your own username
     version="0.0.2.0",
     author="John Park",
-    author_email="parkjohnyc@gmail.com",
+    author_email="",
     description="My TensorFlow Library",
     long_description=long_description,
     long_description_content_type="text/markdown",
