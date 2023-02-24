@@ -94,7 +94,7 @@ class Search_LR():
       name = "Search_LR"
       ):
     
-    super(Search_LR, self).__init__() #what does this do???
+    super().__init__() #what does this do???
     
     self.iLR = LR_range[0]
     self.mLR = LR_range[1]
@@ -171,7 +171,7 @@ class Search_LR_from_compiled():
       name="Search_LR"
       ) -> None:
     
-    super(Search_LR, self).__init__() #what does this do???
+    super().__init__() #what does this do???
     
     self.iLR = LR_range[0]
     self.mLR = LR_range[1]
