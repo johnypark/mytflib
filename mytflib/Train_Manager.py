@@ -67,11 +67,11 @@ def change_np_float_to_float(Dict):
       if type(value) is dict:
         change_np_float_to_float(Dict[key]) ##Recursive in case of nested dictionary
 
-      elif type(value) is type(tf.lookup.StaticHashTable(tf.lookup.KeyValueTensorInitializer(
-    tf.constant([1,1]), tf.constant([1,1])),default_value = 0)):
+      #elif type(value) is type(tf.lookup.StaticHashTable(tf.lookup.KeyValueTensorInitializer(
+    #tf.constant([1,1]), tf.constant([1,1])),default_value = 0)):
 
     
-        Dict[key] = float(value.size().numpy())
+        #Dict[key] = float(value.size().numpy())
 
       elif type(value) is list:
         Dict[key] =[float(ele) for ele in value]
