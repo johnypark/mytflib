@@ -1,3 +1,0 @@
-tensorflow
-opencv-python
-tensorflow_addons
